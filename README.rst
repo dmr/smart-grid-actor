@@ -9,4 +9,5 @@ How to install on debian
 7. source virtualenv/bin/activate
 8. rm -R virtualenv-1.7
 9. pip install pip -U
+10. aptitude install gcc python-dev libevent-dev
 10. pip install -r requirements.txt

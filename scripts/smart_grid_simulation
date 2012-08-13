@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+
+import smart_grid_simulation
+from smart_grid_simulation.server import start_actor_server
+from smart_grid_simulation.cli_parser import parse_actor_server_arguments
+
+if __name__ == '__main__':
+    start_actor_server(
+        **parse_actor_server_arguments()
+    )
