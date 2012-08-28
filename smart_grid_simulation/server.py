@@ -18,9 +18,8 @@ def get_value_range(environ, start_response, response_headers, actor):
 
 
 def get_value(environ, start_response, response_headers, actor):
-    # convert output value to string
-    output = str(actor.get_value())
-    response_headers.append(('Content-Type', 'text/json'))
+    output = json.dumps({'value': actor.get_value()})
+    response_headers.append(('Content-Type', 'application/json'))
     response_headers.append(('Content-Length', str(len(output))))
     start_response('200 OK', response_headers)
     return [output]

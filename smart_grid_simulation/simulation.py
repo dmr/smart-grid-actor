@@ -247,13 +247,20 @@ class RemoteActor(AbstractActor):
 
     def get_value(self):
         try:
-            time_before_request = time.time()
-            request_result = urllib2.urlopen(self.uri,
+            #time_before_request = time.time()
+            url = self._uri + '/'
+            request_result = urllib2.urlopen(url,
                 timeout=self.get_timeout).read()
-            time_after_request = time.time()
-        except Exception as e:
+            #time_after_request = time.time()
+        except urllib2.URLError as exc:
+            raise urllib2.URLError(
+                '{0} {1}'.format(self._uri, exc.reason))
+
+        except Exception as exc:
             # show error in multiprocessing process also
-            print "Error querying {0}".format(self.uri)
+            print "Error querying {0}".format(self._uri)
             import traceback; print traceback.format_exc()
             raise
-        return request_result
+
+        actor_value = json.loads(request_result)['value']
+        return actor_value
