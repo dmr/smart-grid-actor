@@ -5,11 +5,7 @@ import time
 import urllib2
 
 import csp_solver
-minisat_path = '/Users/daniel/Desktop/DA/code/minisat'
-sugarjar_path = '/Users/daniel/Desktop/DA/code/sugar-v1-15-0.jar'
 
-import tempfile
-tmp_folder = tempfile.gettempdir()
 
 
 
@@ -122,20 +118,35 @@ class Actor(AbstractActor):
 
 
 class ControllerActor(AbstractActor):
-    def __init__(self, actors):
-        for a in actors:
-            assert isinstance(a, AbstractActor)
-        self.actors = actors
+    _actors=None
+
+    def __init__(self,
+                 actors,
+                 csp_solver_config
+    ):
+        for actor in actors:
+            if not isinstance(actor, AbstractActor):
+                raise Exception("Please pass a valid "
+                    "AbstractActor instance, not '%s'"
+                    % actor
+                )
+        # actors needs to be a list
+        assert isinstance(actors, list)
+        self._actors = actors
         AbstractActor.__init__(self)
 
+        self._csp_solver_config = csp_solver_config
+
     def get_value(self):
-        time_before_request = time.time()
+        #time_before_request = time.time()
         query_results = parallel_query_actors(
-            self.actors)
-        print "res"
-        import pprint; pprint.pprint(query_results)
-        time_after_request = time.time()
-        result = str(sum([int(body) for _t, _t, body in query_results]))
+            self._actors)
+        #time_after_request = time.time()
+        query_results.wait()
+        result = sum([
+            int(body)
+            for _t, _t, body in query_results.get()
+        ])
         time_after_calculation = time.time()
         return result
 
@@ -144,7 +155,7 @@ class ControllerActor(AbstractActor):
         range_max = 0
         all_actor_ranges = []
 
-        for actor in self.actors:
+        for actor in self._actors:
             actor_value_range = actor.get_value_range()
             all_actor_ranges.append(actor_value_range)
             actor_min = min(actor_value_range)
@@ -163,16 +174,12 @@ class ControllerActor(AbstractActor):
         # every possible answer (--> infinity)
         own_value_range = []
 
-        #import ramdisk_mounter
-        #with ramdisk_mounter.ramdisk(tmp_folder):
         for possibly_a_value_range_value in range_theo_max:
             #self.log('trying to find {0}'.format(result))
             csp_result = csp_solver.do_solve(
                 variables=all_actor_ranges,
                 reference_value=possibly_a_value_range_value,
-                tmp_folder=tmp_folder,
-                minisat_path=minisat_path,
-                sugarjar_path=sugarjar_path
+                **self._csp_solver_config
             )
 
             #problem = constraint.Problem(self._solver)
@@ -201,14 +208,10 @@ class ControllerActor(AbstractActor):
     def set_value(self, new_value):
         value_range = self.get_value_range()
 
-        #import ramdisk_mounter
-        #with ramdisk_mounter.ramdisk(tmp_folder):
         csp_result = csp_solver.do_solve(
-            variables=value_range,
-            reference_value=new_value,
-            tmp_folder=tmp_folder,
-            minisat_path=minisat_path,
-            sugarjar_path=sugarjar_path
+            variables=all_actor_ranges,
+            reference_value=set_value,
+            **self._csp_solver_config
         )
         if ('satisfiable_bool' in csp_result
             and csp_result['satisfiable_bool'] == True):
