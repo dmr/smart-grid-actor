@@ -216,11 +216,9 @@ class ControllerActor(AbstractActor):
         if range_theo_max_length > 500:
             self.log('warning: big interval to check: {0}'.format(
                 range_theo_max_length))
-            assert 0, 'please improve algorithm for large numbers'
+            raise ValueError('please improve algorithm for large numbers')
 
-        # faster to calculate a few small problems that to run through
-        # every possible answer (--> infinity)
-        own_value_range = []
+        own_value_range = set()
 
         for possibly_a_value_range_value in range_theo_max:
             #self.log('trying to find {0}'.format(result))
@@ -246,7 +244,7 @@ class ControllerActor(AbstractActor):
 
             if ('satisfiable_bool' in csp_result
                 and csp_result['satisfiable_bool'] == True):
-                own_value_range.append(possibly_a_value_range_value)
+                own_value_range.add(possibly_a_value_range_value)
             else:
                 self.log('not a solution: {0}'.format(
                     possibly_a_value_range_value))
