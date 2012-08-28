@@ -98,11 +98,15 @@ class AbstractActor(object):
         return hash(self.id)
 
     def validate(self, value):
-        value_range = self.get_value_range()
-        if not value in value_range:
-            raise NotImplementedError(
-            '{0} not in value_range {1}'.format(value, value_range))
-        return int(value)
+        try:
+            set_value = int(value)
+        except ValueError as exc:
+            raise NotSolvable(
+                "Not a valid integer: '%s'" % value)
+        if set_value != value:
+            self.log("Value was converted: %s --> %s"
+                % (value, set_value))
+        return set_value
 
 
 class Actor(AbstractActor):
@@ -141,8 +145,16 @@ class Actor(AbstractActor):
         return self.value_range
 
     def set_value(self, new_value):
-        self.value = self.validate(new_value)
+        set_value = self.validate(new_value)
 
+        value_range = self.get_value_range()
+        if not set_value in value_range:
+            raise NotSolvable(
+                '{0} not in value_range {1}'.format(
+                    set_value, list(value_range)))
+
+        self._value = set_value
+        return set_value
 
 class ControllerActor(AbstractActor):
     _actors=None
@@ -233,7 +245,12 @@ class ControllerActor(AbstractActor):
         return own_value_range
 
     def set_value(self, new_value):
-        value_range = self.get_value_range()
+        set_value = self.validate(new_value)
+
+        all_actor_ranges = []
+        for actor in self._actors:
+            actor_value_range = actor.get_value_range()
+            all_actor_ranges.append(actor_value_range)
 
         csp_result = csp_solver.do_solve(
             variables=all_actor_ranges,
@@ -279,6 +296,35 @@ class RemoteActor(AbstractActor):
             # show error in multiprocessing process also
             print "Error querying {0}".format(self._uri)
             import traceback; print traceback.format_exc()
+            raise
+
+        actor_value = json.loads(request_result)['value']
+        return actor_value
+    def set_value(self, new_value):
+        set_value = self.validate(new_value)
+
+        try:
+            #time_before_request = time.time()
+            url = self._uri + '/'
+            data = str(set_value)
+            opener = urllib2.build_opener(urllib2.HTTPHandler)
+            request = urllib2.Request(url, data=data)
+            request.add_header('Content-Type', 'application/json')
+            request.get_method = lambda: 'PUT'
+            request_response = opener.open(
+                request, timeout=self.get_timeout)
+            request_result = request_response.read()
+            #time_after_request = time.time()
+        except urllib2.HTTPError as exc:
+            raise NotSolvable('400 %s' % exc)
+        except urllib2.URLError as exc:
+            raise urllib2.URLError(
+                '{0} {1}'.format(self._uri, exc.reason))
+
+        except Exception as exc:
+            # show error in multiprocessing process also
+            #print "Error querying {0}".format(self.uri)
+            #import traceback; print traceback.format_exc()
             raise
 
         actor_value = json.loads(request_result)['value']
