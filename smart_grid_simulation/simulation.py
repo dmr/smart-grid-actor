@@ -57,6 +57,8 @@ def parallel_query_actors(
 
 
 class AbstractActor(object):
+    NotSolvable = NotSolvable
+
     def log(self, msg): print time.time(), self.id, msg
 
     def __repr__(self):
@@ -93,8 +95,9 @@ class AbstractActor(object):
         return False
 
     def __hash__(self):
-        # It is wrong to really compare the object here. This case is
-        # important to work with references in set() instances for instance
+        # It is wrong to really compare the object here.
+        # __hash__ is used for comparisons if two objects
+        # mean the same object
         return hash(self.id)
 
     def validate(self, value):
@@ -139,10 +142,10 @@ class Actor(AbstractActor):
         time_before_request = time.time()
         #time.sleep(self.value_delay)
         time_after_request = time.time()
-        return self.value
+        return self._value
 
     def get_value_range(self):
-        return self.value_range
+        return self._value_range
 
     def set_value(self, new_value):
         set_value = self.validate(new_value)
@@ -190,6 +193,11 @@ class ControllerActor(AbstractActor):
         return result
 
     def get_value_range(self):
+        # alternative algorithm: try every possible answer. This is
+        # not an option as there might be infinity possibilities
+        # --> calculate a few small problems by trying out every
+        # possibility is solvable and faster
+
         range_min = 0
         range_max = 0
         all_actor_ranges = []
@@ -204,6 +212,7 @@ class ControllerActor(AbstractActor):
 
         range_theo_max = range(range_min, range_max+1)
         range_theo_max_length = len(range_theo_max)
+
         if range_theo_max_length > 500:
             self.log('warning: big interval to check: {0}'.format(
                 range_theo_max_length))
@@ -257,6 +266,7 @@ class ControllerActor(AbstractActor):
             reference_value=set_value,
             **self._csp_solver_config
         )
+
         if ('satisfiable_bool' in csp_result
             and csp_result['satisfiable_bool'] == True):
             for index, assigned_value in enumerate(csp_result['solutions']):
