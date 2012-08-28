@@ -122,6 +122,15 @@ class Actor(AbstractActor):
 
         AbstractActor.__init__(self)
 
+        if value is not None:
+            try:
+                self.set_value(value)
+            except NotSolvable as exc:
+                raise ValueError(exc.message)
+        else:
+            # assumption: if no value is given, consume as little
+            # as possible
+            self.set_value(min(self._value_range))
     def get_value(self):
         time_before_request = time.time()
         #time.sleep(self.value_delay)
