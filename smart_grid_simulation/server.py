@@ -92,19 +92,30 @@ def get_application(actor, host_uri):
     return application
 
 
-def start_actor_server(host_port_tuple, actor,
-                       start_in_background_thread=False
-    ):
-    host_uri = 'http://{0}:{1}'.format(*host_port_tuple)
+def start_actor_server(
+        actor,
+        host_port_tuple=None,
+        start_in_background_thread=False
+        ):
 
-    print "Running actor server on {0}".format(host_uri)
+    if not host_port_tuple:
+        # if no specific port is given, run on random free port
+        host_port_tuple = ('', 0)
+
     try:
         sock = eventlet.listen(host_port_tuple)
     except socket.error as (err_num, err_str):
         if err_num == 48:
             print ('Port "{0}" is already in use --> start with "--exclude'
-                   '{0}"? --> Not starting server on {0}.').format(port)
+                   '{0}"? --> Not starting server on {0}.').format(host_port_tuple[1])
+            import sys
+            sys.exit(1)
         raise
+
+    port = sock.getsockname()[1]
+
+    host_uri = 'http://{0}:{1}'.format(host_port_tuple[0], port)
+    print "Running actor server on {0}".format(host_uri)
 
     application = get_application(actor, host_uri)
 
@@ -119,7 +130,7 @@ def start_actor_server(host_port_tuple, actor,
         )
         process.daemon = True
         process.start()
-
+        return port, process
     else:
         try:
             eventlet.wsgi.server(sock, application)
