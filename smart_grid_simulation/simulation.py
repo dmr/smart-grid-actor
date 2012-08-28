@@ -267,16 +267,16 @@ class ControllerActor(AbstractActor):
 
         if ('satisfiable_bool' in csp_result
             and csp_result['satisfiable_bool'] == True):
-            for index, assigned_value in enumerate(csp_result['solutions']):
-                self.log('Setting value %s for Actor %s (id %s)'
-                         % (assigned_value, index, self.actors[index]))
-                self.actors[index].set_value(assigned_value)
 
-            self._value_setpoint = new_value # this should be the new value
-            self.set_value_time = time.time()
+            for index, assigned_value in enumerate(csp_result['solution_list']):
+                self.log('Setting value %s for Actor %s (id %s)'
+                         % (assigned_value, index, self._actors[index]))
+                self._actors[index].set_value(assigned_value)
+
         else:
             raise NotSolvable('{0} not in {1}'.format(new_value,
                                                       value_range))
+            #self.set_value_time = time.time()
 
         #self.value = self.validate(new_value)
 
