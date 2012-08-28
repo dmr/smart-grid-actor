@@ -1,21 +1,32 @@
 # -*- coding: utf-8 -*-
-
 import multiprocessing
+import multiprocessing.pool
 import time
 import urllib2
+import json
 
 import csp_solver
 
 
+# To bypass the "daemon-process not allowed to have
+# child processes" restriction: introduce own Pool implementation
+class NoDaemonProcess(multiprocessing.Process):
+    # 'daemon' attribute should always return False
+    _get_daemon = lambda self: False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+# sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is a wrapper function, not a proper class.
+class CustomPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 
 count = 0
 
 
-
 class NotSolvable(Exception):
     pass
-
 
 
 def get_actor_value(actor):
@@ -29,11 +40,10 @@ def parallel_query_actors(
         actors,
         worker_count=4, # optimum for worker count with two processors
         fct=get_actor_value
-        #callback=lambda v:v
         ):
-    pool = multiprocessing.Pool(processes=worker_count)
+    pool = CustomPool(processes=worker_count)
     try:
-        result = pool.map_async(fct, actors) #, callback=callback)
+        result = pool.map_async(fct, actors)
         pool.close()
         pool.join()
     except (KeyboardInterrupt, SystemExit):

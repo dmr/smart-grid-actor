@@ -86,13 +86,15 @@ def start_actor_server(host_port_tuple, actor,
 
     if start_in_background_thread == True:
         import StringIO
-        import threading
-        thr = threading.Thread(target=eventlet.wsgi.server,
-                               args=(sock, application),
-                               kwargs=dict(log=StringIO.StringIO())
+
+        from simulation import NoDaemonProcess
+        process = NoDaemonProcess(
+            target=eventlet.wsgi.server,
+            args=(sock, application),
+            kwargs=dict(log=StringIO.StringIO())
         )
-        thr.daemon = True
-        thr.start()
+        process.daemon = True
+        process.start()
 
     else:
         try:
