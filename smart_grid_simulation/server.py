@@ -5,6 +5,18 @@ import eventlet
 import eventlet.wsgi
 
 
+def get_value_range(environ, start_response, response_headers, actor):
+
+    # convert set to list because list cannot be serialised
+    actor_vr = list(actor.get_value_range())
+
+    output = json.dumps({'value_range': actor_vr})
+    response_headers.append(('Content-Type', 'application/json'))
+    response_headers.append(('Content-Length', str(len(output))))
+    start_response('200 OK', response_headers)
+    return [output]
+
+
 def get_value(environ, start_response, response_headers, actor):
     # convert output value to string
     output = str(actor.get_value())
@@ -47,21 +59,25 @@ def get_application(actor, host_uri):
         #if 'HTTP_ACCEPT_ENCODING' in environ:
         # 'identity, deflate, compress, gzip' --> ?
 
-        #print environ
+        request_method = environ['REQUEST_METHOD'].lower()
 
         response_headers = [('Host', host_uri),
             ('Content-Location', environ['PATH_INFO'])]
 
-        if environ['PATH_INFO'] != '/':
+        if environ['PATH_INFO'] == '/vr/':
+            method_handlers = {
+                'get': get_value_range,
+            }
+        elif environ['PATH_INFO'] == '/':
+            method_handlers = {
+                'get': get_value,
+                'put': set_value
+            }
+        else:
             start_response('301 Moved Permanently', response_headers)
             response_headers.append(('Location', '/'))
             return ['Moved permanently: /']
 
-        request_method = environ['REQUEST_METHOD'].lower()
-        method_handlers = {
-            'get': get_value,
-            'put': set_value
-        }
         return method_handlers[request_method](environ, start_response,
                                                response_headers, actor)\
             if request_method in method_handlers else return_405
