@@ -310,6 +310,31 @@ class RemoteActor(AbstractActor):
 
         actor_value = json.loads(request_result)['value']
         return actor_value
+
+    def get_value_range(self):
+        try:
+            #time_before_request = time.time()
+            url = self._uri + '/vr/'
+            request_result = urllib2.urlopen(url,
+                timeout=self.get_timeout).read()
+            #time_after_request = time.time()
+        except urllib2.HTTPError as exc:
+            raise NotSolvable('400 %s' % exc)
+        except urllib2.URLError as exc:
+            raise urllib2.URLError(
+                '{0} {1}'.format(self._uri, exc.reason))
+
+        except Exception as exc:
+            # show error in multiprocessing process also
+            #print "Error querying {0}".format(self.uri)
+            #import traceback; print traceback.format_exc()
+            raise
+
+        actor_value_range = set(
+            json.loads(request_result)['value_range']
+        )
+        return actor_value_range
+
     def set_value(self, new_value):
         set_value = self.validate(new_value)
 
