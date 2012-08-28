@@ -273,12 +273,14 @@ class ControllerActor(AbstractActor):
                          % (assigned_value, index, self._actors[index]))
                 self._actors[index].set_value(assigned_value)
 
-        else:
-            raise NotSolvable('{0} not in {1}'.format(new_value,
-                                                      value_range))
             #self.set_value_time = time.time()
 
-        #self.value = self.validate(new_value)
+            return set_value
+
+        else:
+            raise NotSolvable(
+                '{0} is not an satisfiable'.format(set_value)
+            )
 
 
 class RemoteActor(AbstractActor):

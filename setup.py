@@ -68,7 +68,10 @@ setup(
         'Programming Language :: Python',
     ],
 
-    tests_require=['Attest'],
+    tests_require=[
+        'Attest',
+        'behave'
+    ],
     test_loader='attest:auto_reporter.test_loader',
     test_suite='tests.sgsim_test'
 )

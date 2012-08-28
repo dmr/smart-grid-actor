@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-
+import json
 import socket
+
 import eventlet
 import eventlet.wsgi
 
@@ -25,18 +26,26 @@ def get_value(environ, start_response, response_headers, actor):
     return [output]
 
 
+def return_400(start_response, response_headers, msg):
+    start_response('400 Bad Request', response_headers)
+    return [msg]
+
+
 def set_value(environ, start_response, response_headers, actor):
     data = environ['wsgi.input'].read()
+
     try:
         actor.set_value(data)
-    except Exception:
-        print 'please pass integer value (converted to unicode by urllib...)'
-        start_response('400 Bad Request', response_headers)
-        return ['Integer input required']
-    output = actor.get_value()
-    response_headers.append(('Content-type', 'text/json'))
-    response_headers.append(('Content-Length', str(len(output))))
-    start_response('200 OK', response_headers)
+    except actor.NotSolvable as exc:
+        print exc
+        return return_400(start_response, response_headers,
+            "Input error: %s" % exc.message)
+    except Exception as exc:
+        print exc
+        return return_400(start_response, response_headers,
+            "Unknown Input error: %s" % exc)
+
+    return get_value(environ, start_response, response_headers, actor)
 
 
 def return_405(environ, start_response):
