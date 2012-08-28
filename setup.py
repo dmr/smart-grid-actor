@@ -58,7 +58,6 @@ setup(
     packages=['smart_grid_simulation'],
     scripts=[
         'scripts/smart_grid_simulation',
-        'scripts/smart_grid_simulation_actor_starter'
     ],
     zip_safe=False,
     platforms='any',
