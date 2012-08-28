@@ -138,6 +138,15 @@ class Actor(AbstractActor):
             # assumption: if no value is given, consume as little
             # as possible
             self.set_value(min(self._value_range))
+
+    def get_configuration(self):
+        return dict(
+            id=self.id,
+            value_range=self._value_range,
+            value=self._value,
+            cls=self.__class__.__name__
+        )
+
     def get_value(self):
         time_before_request = time.time()
         #time.sleep(self.value_delay)
@@ -178,6 +187,14 @@ class ControllerActor(AbstractActor):
         AbstractActor.__init__(self)
 
         self._csp_solver_config = csp_solver_config
+
+    def get_configuration(self):
+        return dict(
+            id=self.id,
+            actors=[actor.get_configuration()
+                    for actor in self._actors],
+            cls=self.__class__.__name__
+        )
 
     def get_value(self):
         #time_before_request = time.time()
@@ -290,6 +307,13 @@ class RemoteActor(AbstractActor):
         self._uri = uri
         self.get_timeout = get_timeout
         AbstractActor.__init__(self)
+
+    def get_configuration(self):
+        return dict(
+            id=self.id,
+            uri=self._uri,
+            cls=self.__class__.__name__
+        )
 
     def get_value(self):
         try:
