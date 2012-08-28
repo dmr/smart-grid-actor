@@ -106,12 +106,20 @@ class AbstractActor(object):
 
 
 class Actor(AbstractActor):
-    def __init__(self, value, value_range,
-                 value_delay=float(.03)
-    ):
-        self.value_range = value_range
-        self.set_value(value)
-        self.value_delay = value_delay
+    _value_range = None
+    _value = None
+
+    def __init__(self,
+                 value_range,
+                 value=None
+                 ):
+        for val in value_range:
+            if not int(val) == val:
+                raise ValueError('Invalid value_range: '
+                    'Not an integer value: "%s"' % val)
+
+        self._value_range = set(value_range)
+
         AbstractActor.__init__(self)
 
     def get_value(self):
@@ -240,8 +248,10 @@ class ControllerActor(AbstractActor):
 
 
 class RemoteActor(AbstractActor):
+    _uri = None
+
     def __init__(self, uri, get_timeout=5):
-        self.uri = uri
+        self._uri = uri
         self.get_timeout = get_timeout
         AbstractActor.__init__(self)
 
