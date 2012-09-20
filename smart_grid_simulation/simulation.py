@@ -148,9 +148,6 @@ class Actor(AbstractActor):
         )
 
     def get_value(self):
-        time_before_request = time.time()
-        #time.sleep(self.value_delay)
-        time_after_request = time.time()
         return self._value
 
     def get_value_range(self):

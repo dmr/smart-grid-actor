@@ -6,24 +6,22 @@ import eventlet
 import eventlet.wsgi
 
 
-def get_value_range(environ, start_response, response_headers, actor):
-
-    # convert set to list because list cannot be serialised
-    actor_vr = list(actor.get_value_range())
-
-    output = json.dumps({'value_range': actor_vr})
+def return_json_200(start_response, response_headers, output_dct):
+    output = json.dumps(output_dct)
     response_headers.append(('Content-Type', 'application/json'))
     response_headers.append(('Content-Length', str(len(output))))
     start_response('200 OK', response_headers)
     return [output]
+
+
+def get_value_range(environ, start_response, response_headers, actor):
+    # convert set to list because list cannot be serialised
+    actor_vr = list(actor.get_value_range())
+    return return_json_200(start_response, response_headers, {'value_range': actor_vr})
 
 
 def get_value(environ, start_response, response_headers, actor):
-    output = json.dumps({'value': actor.get_value()})
-    response_headers.append(('Content-Type', 'application/json'))
-    response_headers.append(('Content-Length', str(len(output))))
-    start_response('200 OK', response_headers)
-    return [output]
+    return return_json_200(start_response, response_headers, {'value': actor.get_value()})
 
 
 def return_400(start_response, response_headers, msg):
