@@ -72,7 +72,7 @@ def get_actor_server_parser():
         # is started
         # Easy defaults: current folder. Will fail if files don't exist
         import csp_solver
-        actor_controller = csp_solver.add_config_params_to_argparse_parser(
+        actor_controller = csp_solver.add_csp_config_params_to_argparse_parser(
             actor_controller)
     except ImportError:
         print "Warning:", csp_not_installed_msg

@@ -239,7 +239,7 @@ class ControllerActor(AbstractActor):
             csp_result = csp_solver.do_solve(
                 variables=all_actor_ranges,
                 reference_value=possibly_a_value_range_value,
-                **self._csp_solver_config
+                csp_solver_config=self._csp_solver_config
             )
 
             #problem = constraint.Problem(self._solver)
@@ -276,7 +276,7 @@ class ControllerActor(AbstractActor):
         csp_result = csp_solver.do_solve(
             variables=all_actor_ranges,
             reference_value=set_value,
-            **self._csp_solver_config
+            csp_solver_config=self._csp_solver_config
         )
 
         if ('satisfiable_bool' in csp_result
