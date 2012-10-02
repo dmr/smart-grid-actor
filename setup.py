@@ -56,9 +56,13 @@ setup(
     description='',
     long_description=__doc__,
     packages=['smart_grid_simulation'],
-    scripts=[
-        'scripts/smart_grid_simulation',
-    ],
+
+    entry_points={
+        'console_scripts': [
+            'smart_grid_simulation = smart_grid_simulation:main',
+        ],
+    },
+
     zip_safe=False,
     platforms='any',
     install_requires=install_requires,

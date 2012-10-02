@@ -18,8 +18,14 @@ def check_uri(uri):
     return uri
 
 
-def get_actor_server_parser():
-    parser = argparse.ArgumentParser()
+def get_parser():
+    parser = argparse.ArgumentParser(
+        "smart_grid_simulation",
+        description=(
+            "Starts a Smart Grid Actor. This actor can "
+            "either be a direct actor or a remote actor"
+        )
+    )
 
     parser.add_argument('--host-name', action="store",
         default='localhost',
@@ -33,7 +39,13 @@ def get_actor_server_parser():
     subparsers = parser.add_subparsers(
         help=("Please decide: 'a' to start an Actor server, "
               "'r' to start a Controller Actor server."))
+    add_actor_server_to_subparsers(subparsers)
+    add_controller_actor_to_subparsers(subparsers)
 
+    return parser
+
+
+def add_actor_server_to_subparsers(subparsers):
     actor_server = subparsers.add_parser('a',
         help='Start Actor server')
     actor_server.add_argument('-v', '--value',
@@ -55,15 +67,18 @@ def get_actor_server_parser():
     actor_server.set_defaults(func=actor_server_parse_args)
     actor_server.set_defaults(case="actor_server")
 
+
+def add_controller_actor_to_subparsers(subparsers):
     actor_controller = subparsers.add_parser('c',
-         help='Start Controller Actor server')
+        help='Start Controller Actor server')
 
     actor_controller.add_argument('-a', '--actor-uris', nargs='+',
         type=check_uri, required=True,
         help="URIs for remote actors of this controller actor actor"
     )
 
-    csp_not_installed_msg = ("csp_solver not installed! "
+    csp_not_installed_msg = (
+        "csp_solver not installed! "
         "To start Controller Actors install csp_solver from "
         "http://github.com/dmr/csp-solver.git")
     try:
@@ -101,27 +116,3 @@ def get_actor_server_parser():
         host_port_tuple = args.host_name, args.port
         return dict(host_port_tuple=host_port_tuple, actor=actor)
     actor_controller.set_defaults(func=actor_controller_parse_args)
-
-    return parser
-
-
-def parse_actor_server_arguments(sys_args=sys.argv[1:],
-         check_remote_actors=True # introduced to make this testable
-                                 ):
-    parser = get_actor_server_parser()
-    parsed_args = parser.parse_args(args=sys_args)
-    result = parsed_args.func(parsed_args)
-
-    if check_remote_actors == True:
-        # test is actors exist to prevent errors later
-        if isinstance(result['actor'], ControllerActor):
-            for actor in result['actor']._actors:
-                import urllib2
-                try:
-                    actor.get_value()
-                except urllib2.URLError as exc:
-                    print exc.reason
-                    import sys
-                    sys.exit(1)
-
-    return result

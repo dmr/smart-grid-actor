@@ -3,7 +3,7 @@
 import unittest
 
 from smart_grid_simulation.simulation import Actor
-from smart_grid_simulation.cli_parser import parse_actor_server_arguments
+from smart_grid_simulation import parse_arguments
 
 from _utils import sugarjar_path
 
@@ -16,7 +16,7 @@ def do_parser_test(
         expected_actor,
         expected_host_port_tuple=default_host_port_tuple
         ):
-    parsed_args = parse_actor_server_arguments(string.split())
+    parsed_args = parse_arguments(string.split())
     assert parsed_args['host_port_tuple'] == expected_host_port_tuple, \
         parsed_args['host_port_tuple']
     assert parsed_args['actor'] == expected_actor, parsed_args['actor']
@@ -55,12 +55,12 @@ class ActorServerCliParserTest(unittest.TestCase):
     def test_value_failing_values(self):
         self.failUnlessRaises(
             ValueError,
-            parse_actor_server_arguments,
+            parse_arguments,
             "a --value-range 1 -v2".split()
         )
         self.failUnlessRaises(
             ValueError,
-            parse_actor_server_arguments,
+            parse_arguments,
             "a --value-range 1 -v0".split()
         )
 
@@ -69,7 +69,7 @@ class ControllerActorServerCliParserTest(unittest.TestCase):
     def test_actor_hostname_port_value(self):
         # just one simple test...
 
-        parsed_args = parse_actor_server_arguments(
+        parsed_args = parse_arguments(
             'c -a http://localhost:9000 --sugar-jar {0}'.format(
                 sugarjar_path
             ).split(),
