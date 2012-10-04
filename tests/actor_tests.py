@@ -4,9 +4,48 @@ import unittest
 
 from smart_grid_actor.actor import (
     AbstractActor, Actor, NotSolvable, ConfigurationException,
+    used_ids
 )
 
 from _utils import AbstractInterface
+
+
+class ActorIdGeneration(unittest.TestCase):
+    def test_generates_increasing_numbers(self):
+        a1 = AbstractActor()
+        a2 = AbstractActor()
+        self.assertGreater(a2.id,a1.id)
+        a3 = AbstractActor()
+        self.assertGreater(a3.id,a2.id)
+
+    def test_converts_to_int(self):
+        # overwrite original storage to avoid conclicts
+        used_ids = set([])
+
+        a1 = AbstractActor("1000")
+        self.assertEqual(a1.id, 1000)
+
+    def test_prevents_duplicate_ids(self):
+        a1 = AbstractActor()
+        self.failUnlessRaises(
+            ConfigurationException,
+            AbstractActor,
+            a1.id
+        )
+
+    def test_prevents_invalid_input(self):
+        self.failUnlessRaises(
+            ValueError,
+            AbstractActor,
+            "a"
+        )
+
+    def test_used_by_subclasses(self):
+        # overwrite original storage to avoid conclicts
+        used_ids = set([])
+
+        a1 = Actor(value_range=[1],id=123)
+        self.assertEqual(a1.id, 123)
 
 
 def get_actor(
