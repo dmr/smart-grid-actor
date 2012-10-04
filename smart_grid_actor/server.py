@@ -34,22 +34,24 @@ def return_400(start_response, response_headers, msg):
     return [msg]
 
 
-def return_json_200(start_response, response_headers, output_dct):
+def return_json_200(start_response, response_headers,
+                    output_dct):
     output = json.dumps(output_dct)
-
-    response_headers.append(('Content-Type', 'application/json'))
-    response_headers.append(('Content-Length', str(len(output))))
+    response_headers.append(
+        ('Content-Type', 'application/json'))
+    response_headers.append(
+        ('Content-Length', str(len(output))))
     start_response('200 OK', response_headers)
 
     return [output]
 
 
-def return_rdf_200(start_response, response_headers, output_dct):
-    dct_key_to_rdf_map = {
-        'value_range': 'https://example.com/Actor/value_range',
-        'value': 'https://example.com/Actor/value',
-    }
-    assert 0, 'implement'
+#def return_rdf_200(start_response, response_headers, output_dct):
+#    dct_key_to_rdf_map = {
+#        'value_range': 'https://example.com/Actor/value_range',
+#        'value': 'https://example.com/Actor/value',
+#    }
+#    assert 0, 'implement'
 
 
 def get_value_range(environ, actor):
@@ -117,7 +119,8 @@ def get_application(actor, host_uri):
                 pass
             else:
                 return return_406(
-                    msg='Wrong Accept header: only text/json acceptable',
+                    msg=('Wrong Accept header: only '
+                         'text/json acceptable'),
                     **kw
                 )
 
@@ -144,7 +147,8 @@ def start_actor_server(
         ):
 
     if not host_port_tuple:
-        # if no specific port is given, run on random free port
+        # if no specific port is given,
+        # run on free port
         host_port_tuple = ('localhost', 0)
 
     try:
@@ -172,7 +176,7 @@ def start_actor_server(
             import StringIO
             logger = StringIO.StringIO()
 
-        from simulation import NoDaemonProcess
+        from smart_grid_actor.actor import NoDaemonProcess
         process = NoDaemonProcess(
             target=eventlet.wsgi.server,
             args=(sock, application),

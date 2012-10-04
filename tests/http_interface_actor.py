@@ -3,8 +3,8 @@ import unittest
 
 import requests
 
-from smart_grid_simulation.server import start_actor_server
-from smart_grid_simulation.simulation import Actor
+from smart_grid_actor.server import start_actor_server
+from smart_grid_actor.actor import Actor
 
 
 def assure_response(

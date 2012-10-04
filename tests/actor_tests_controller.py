@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from smart_grid_simulation.simulation import (Actor,
-                                              ControllerActor,
-                                              NotSolvable)
+from smart_grid_actor.actor import Actor, ControllerActor, NotSolvable
 
 from _utils import csp_solver_config
 

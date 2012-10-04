@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from smart_grid_simulation.simulation import Actor
-from smart_grid_simulation import parse_arguments
+from smart_grid_actor.actor import Actor
+from smart_grid_actor import parse_arguments
 
 from _utils import sugarjar_path
 

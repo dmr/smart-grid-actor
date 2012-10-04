@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-from smart_grid_simulation.simulation import (
+from smart_grid_actor.actor import (
     Actor, RemoteActor, ControllerActor)
 
 import urlparse

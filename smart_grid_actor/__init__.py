@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys
 
-from smart_grid_simulation.server import start_actor_server
-from smart_grid_simulation.cli_parser import get_parser
-from smart_grid_simulation.simulation import ControllerActor
+from smart_grid_actor.server import start_actor_server
+from smart_grid_actor.cli_parser import get_parser
+from smart_grid_actor.actor import ControllerActor
 
 
 def parse_arguments(
@@ -14,6 +14,7 @@ def parse_arguments(
     parsed_args = parser.parse_args(args=sys_args)
     result = parsed_args.func(parsed_args)
 
+    # TODO: remove this check?
     if check_remote_actors == True:
         # test is actors of a ControllerActor exist
         # to prevent errors later

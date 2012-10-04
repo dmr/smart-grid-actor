@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from smart_grid_simulation.simulation import Actor, NotSolvable
+from smart_grid_actor.actor import (
+    AbstractActor, Actor, NotSolvable, ConfigurationException,
+)
 
 from _utils import AbstractInterface
 

@@ -1,16 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import unittest
 
-
-def test_smart_grid_simulation_is_installed():
-    import smart_grid_simulation
-    assert True
-
-
-from smart_grid_simulation.simulation import (
-    AbstractActor, Actor, NotSolvable)
+from smart_grid_actor.actor import AbstractActor, Actor
 
 
 def test_actor_equality():

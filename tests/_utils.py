@@ -8,7 +8,7 @@ csp_solver_config = csp_solver.get_valid_csp_solver_config(
     sugarjar_path=sugarjar_path
 )
 
-from smart_grid_simulation.simulation import NotSolvable
+from smart_grid_actor.actor import NotSolvable
 
 
 def assure_is_int(test_class_instance, value, expected_value):

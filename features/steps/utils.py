@@ -19,11 +19,11 @@ def add_actor_server_to_context(context, port, vr=None, actors=None):
             " ".join(str(v) for v in actors)
         )
         import os
-        args += ' --minisat={0} --sugar-jar={1}'.format(
+        args += ' --sugar-jar={0}'.format(
             os.path.abspath(os.path.join(
-                os.path.dirname(__file__), '../../tests/minisat')),
-            os.path.abspath(os.path.join(
-                os.path.dirname(__file__), '../../tests/sugar-v1-15-0.jar')),
+                os.path.dirname(__file__),
+                '../../tests/sugar-v1-15-0.jar'
+            )),
         )
 
     sys_args = args.split()

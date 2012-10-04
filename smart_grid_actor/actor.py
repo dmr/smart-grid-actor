@@ -22,7 +22,23 @@ class CustomPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 
 
-count = 0
+class ConfigurationException(Exception):
+    pass
+
+
+used_ids = set([])
+
+def get_actor_id():
+    return max(used_ids) + 1 if used_ids else 1
+
+def register_id(id):
+    id = int(id)
+    if id in used_ids:
+        raise ConfigurationException(
+            "Id {0} already taken".format(id)
+        )
+    used_ids.add(id)
+    return id
 
 
 class NotSolvable(Exception):
@@ -38,7 +54,8 @@ def get_actor_value(actor):
 
 def parallel_query_actors(
         actors,
-        worker_count=4, # optimum for worker count with two processors
+        # optimum for worker count with two processors
+        worker_count=4,
         fct=get_actor_value
         ):
     pool = CustomPool(processes=worker_count)
@@ -59,16 +76,17 @@ def parallel_query_actors(
 class AbstractActor(object):
     NotSolvable = NotSolvable
 
-    def log(self, msg): print time.time(), self.id, msg
+    def log(self, msg):
+        print time.time(), self.id, msg
 
     def __repr__(self):
-        return u"<{0}: {1}>".format(self.__class__.__name__, self.id)
+        return u"<{0}: {1}>".format(
+            self.__class__.__name__, self.id)
 
-    def __init__(self):
-        # global actor count
-        global count
-        count +=1
-        self.id = count
+    def __init__(self, id=None):
+        if not id:
+            id = get_actor_id()
+        self.id = register_id(id)
 
     def get_value_range(self):
         raise NotImplementedError()
@@ -118,7 +136,8 @@ class Actor(AbstractActor):
 
     def __init__(self,
                  value_range,
-                 value=None
+                 value=None,
+                 **kwargs
                  ):
         for val in value_range:
             if not int(val) == val:
@@ -127,7 +146,7 @@ class Actor(AbstractActor):
 
         self._value_range = set(value_range)
 
-        AbstractActor.__init__(self)
+        AbstractActor.__init__(self, **kwargs)
 
         if value is not None:
             try:
@@ -135,8 +154,8 @@ class Actor(AbstractActor):
             except NotSolvable as exc:
                 raise ValueError(exc.message)
         else:
-            # assumption: if no value is given, consume as little
-            # as possible
+            # assumption: if no value is given,
+            # consume as little as possible
             self.set_value(min(self._value_range))
 
     def get_configuration(self):
@@ -165,13 +184,15 @@ class Actor(AbstractActor):
         self._value = set_value
         return set_value
 
+
 class ControllerActor(AbstractActor):
     _actors=None
 
     def __init__(self,
                  actors,
-                 csp_solver_config
-    ):
+                 csp_solver_config,
+                 **kwargs
+                 ):
         for actor in actors:
             if not isinstance(actor, AbstractActor):
                 raise Exception("Please pass a valid "
@@ -194,16 +215,13 @@ class ControllerActor(AbstractActor):
         )
 
     def get_value(self):
-        #time_before_request = time.time()
         query_results = parallel_query_actors(
             self._actors)
-        #time_after_request = time.time()
         query_results.wait()
         result = sum([
             int(body)
             for _t, _t, body in query_results.get()
         ])
-        time_after_calculation = time.time()
         return result
 
     def get_value_range(self):
@@ -230,32 +248,17 @@ class ControllerActor(AbstractActor):
         if range_theo_max_length > 500:
             self.log('warning: big interval to check: {0}'.format(
                 range_theo_max_length))
-            raise ValueError('please improve algorithm for large numbers')
+            raise ValueError(
+                'please improve algorithm for large numbers')
 
         own_value_range = set()
 
         for possibly_a_value_range_value in range_theo_max:
-            #self.log('trying to find {0}'.format(result))
             csp_result = csp_solver.do_solve(
                 variables=all_actor_ranges,
                 reference_value=possibly_a_value_range_value,
                 csp_solver_config=self._csp_solver_config
             )
-
-            #problem = constraint.Problem(self._solver)
-            ## HACK: knowledge of constraint's datastructure to avoid copy
-            #assert not problem._variables
-            #problem._variables = variables
-            ##for id, domain in variables.items():
-            ##    problem.addVariable(id, domain)
-            ## HACK until here
-            ##problem.addConstraint(
-            # constraint.ExactSumConstraint(result), variables.keys())
-            #problem.addConstraint(
-            # lambda *vars: sum(vars) == result, variables.keys())
-            #self.log('solving problem')
-            #solution = problem.getSolution()
-
             if ('satisfiable_bool' in csp_result
                 and csp_result['satisfiable_bool'] == True):
                 own_value_range.add(possibly_a_value_range_value)
@@ -282,13 +285,12 @@ class ControllerActor(AbstractActor):
         if ('satisfiable_bool' in csp_result
             and csp_result['satisfiable_bool'] == True):
 
-            for index, assigned_value in enumerate(csp_result['solution_list']):
-                self.log('Setting value %s for Actor %s (id %s)'
-                         % (assigned_value, index, self._actors[index]))
+            for index, assigned_value in enumerate(
+                    csp_result['solution_list']):
+                self.log('Setting value {0} for Actor {1} (id {2})'.format(
+                    assigned_value, index, self._actors[index]
+                ))
                 self._actors[index].set_value(assigned_value)
-
-            #self.set_value_time = time.time()
-
             return set_value
 
         else:
@@ -300,10 +302,10 @@ class ControllerActor(AbstractActor):
 class RemoteActor(AbstractActor):
     _uri = None
 
-    def __init__(self, uri, get_timeout=5):
+    def __init__(self, uri, get_timeout=5, **kwargs):
         self._uri = uri
         self.get_timeout = get_timeout
-        AbstractActor.__init__(self)
+        AbstractActor.__init__(self, **kwargs)
 
     def get_configuration(self):
         return dict(
@@ -314,42 +316,26 @@ class RemoteActor(AbstractActor):
 
     def get_value(self):
         try:
-            #time_before_request = time.time()
             url = self._uri + '/'
             request_result = urllib2.urlopen(url,
                 timeout=self.get_timeout).read()
-            #time_after_request = time.time()
         except urllib2.URLError as exc:
             raise urllib2.URLError(
                 '{0} {1}'.format(self._uri, exc.reason))
-
-        except Exception as exc:
-            # show error in multiprocessing process also
-            print "Error querying {0}".format(self._uri)
-            import traceback; print traceback.format_exc()
-            raise
 
         actor_value = json.loads(request_result)['value']
         return actor_value
 
     def get_value_range(self):
         try:
-            #time_before_request = time.time()
             url = self._uri + '/vr/'
             request_result = urllib2.urlopen(url,
                 timeout=self.get_timeout).read()
-            #time_after_request = time.time()
         except urllib2.HTTPError as exc:
             raise NotSolvable('400 %s' % exc)
         except urllib2.URLError as exc:
             raise urllib2.URLError(
                 '{0} {1}'.format(self._uri, exc.reason))
-
-        except Exception as exc:
-            # show error in multiprocessing process also
-            #print "Error querying {0}".format(self.uri)
-            #import traceback; print traceback.format_exc()
-            raise
 
         actor_value_range = set(
             json.loads(request_result)['value_range']
@@ -360,7 +346,6 @@ class RemoteActor(AbstractActor):
         set_value = self.validate(new_value)
 
         try:
-            #time_before_request = time.time()
             url = self._uri + '/'
             data = str(set_value)
             opener = urllib2.build_opener(urllib2.HTTPHandler)
@@ -370,18 +355,11 @@ class RemoteActor(AbstractActor):
             request_response = opener.open(
                 request, timeout=self.get_timeout)
             request_result = request_response.read()
-            #time_after_request = time.time()
         except urllib2.HTTPError as exc:
             raise NotSolvable('400 %s' % exc)
         except urllib2.URLError as exc:
             raise urllib2.URLError(
                 '{0} {1}'.format(self._uri, exc.reason))
-
-        except Exception as exc:
-            # show error in multiprocessing process also
-            #print "Error querying {0}".format(self.uri)
-            #import traceback; print traceback.format_exc()
-            raise
 
         actor_value = json.loads(request_result)['value']
         return actor_value

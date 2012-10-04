@@ -3,15 +3,11 @@
 import time
 import unittest
 
-from smart_grid_simulation.simulation import (RemoteActor,
-                                              ControllerActor,
-                                              Actor)
-from smart_grid_simulation.server import start_actor_server
+from smart_grid_actor.actor import (RemoteActor,
+                                    ControllerActor, Actor)
+from smart_grid_actor.server import start_actor_server
 
-from _utils import (
-    csp_solver_config,
-    AbstractInterface
-)
+from _utils import csp_solver_config, AbstractInterface
 
 class RemoteActorInterface(AbstractInterface, unittest.TestCase):
     def setUp(self):
