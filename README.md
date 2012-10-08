@@ -10,8 +10,8 @@ Installation
 
 Checkout git and install requirements from requirements.txt, or just use pip
 
-    pip install git+http://github.com/dmr/smart-grid-simulation.git#egg=smart_grid_simulation
+    pip install git+http://github.com/dmr/smart-grid-actor.git#egg=smart_grid_actor
 
 This will install all dependencies needed, including http://github.com/dmr/csp-solver.
 
-Additionally, you will need to have minisat2 installed in $PATH. See http://github.com/dmr/csp-solver for a more detailled installation description.
+Additionally, you will need to have minisat2 installed in $PATH. See http://github.com/dmr/csp-solver for a more detailed installation description.
