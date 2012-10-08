@@ -1,26 +1,9 @@
 # -*- coding: utf-8 -*-
-import multiprocessing
-import multiprocessing.pool
 import time
 import urllib2
 import json
 
 import csp_solver
-
-
-# To bypass the "daemon-process not allowed to have
-# child processes" restriction: introduce own Pool implementation
-class NoDaemonProcess(multiprocessing.Process):
-    # 'daemon' attribute should always return False
-    _get_daemon = lambda self: False
-    def _set_daemon(self, value):
-        pass
-    daemon = property(_get_daemon, _set_daemon)
-# sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
-# because the latter is a wrapper function, not a proper class.
-class CustomPool(multiprocessing.pool.Pool):
-    Process = NoDaemonProcess
-
 
 class ConfigurationException(Exception):
     pass
@@ -28,49 +11,34 @@ class ConfigurationException(Exception):
 
 used_ids = set([])
 
-def get_actor_id():
-    return max(used_ids) + 1 if used_ids else 1
+def get_next_free_id(id_set):
+    return max(id_set) + 1 if id_set else 1
 
-def register_id(id):
+def register_id(id, id_set):
     id = int(id)
-    if id in used_ids:
+    if id in id_set:
         raise ConfigurationException(
             "Id {0} already taken".format(id)
         )
-    used_ids.add(id)
+    id_set.add(id)
     return id
 
 
 class NotSolvable(Exception):
     pass
 
+class ConnectionError(Exception):
+    pass
+
 
 def get_actor_value(actor):
-    time_before_request = time.time()
-    actor_value = actor.get_value()
-    time_after_request = time.time()
-    return time_before_request, time_after_request, actor_value
-
-
-def parallel_query_actors(
-        actors,
-        # optimum for worker count with two processors
-        worker_count=4,
-        fct=get_actor_value
-        ):
-    pool = CustomPool(processes=worker_count)
     try:
-        result = pool.map_async(fct, actors)
-        pool.close()
-        pool.join()
-    except (KeyboardInterrupt, SystemExit):
-        print 'parent received control-c'
-        pool.terminate()
-        raise
-    except Exception:
-        pool.terminate()
-        raise
-    return result
+        time_before_request = time.time()
+        actor_value = actor.get_value()
+        time_after_request = time.time()
+        return time_before_request, time_after_request, actor_value
+    except KeyboardInterrupt:
+        pass
 
 
 class AbstractActor(object):
@@ -83,10 +51,17 @@ class AbstractActor(object):
         return u"<{0}: {1}>".format(
             self.__class__.__name__, self.id)
 
-    def __init__(self, id=None):
+    def __init__(self,
+            id=None,
+            id_collection=used_ids,
+            level=None,
+            ):
         if not id:
-            id = get_actor_id()
-        self.id = register_id(id)
+            id = get_next_free_id(id_collection)
+        self.id = register_id(id, id_collection)
+
+        if level:
+            self.level = level
 
     def get_value_range(self):
         raise NotImplementedError()
@@ -191,8 +166,12 @@ class ControllerActor(AbstractActor):
     def __init__(self,
                  actors,
                  csp_solver_config,
+                 multiprocessing_pool,
                  **kwargs
                  ):
+
+        self.multiprocessing_pool = multiprocessing_pool
+
         for actor in actors:
             if not isinstance(actor, AbstractActor):
                 raise Exception("Please pass a valid "
@@ -215,12 +194,18 @@ class ControllerActor(AbstractActor):
         )
 
     def get_value(self):
-        query_results = parallel_query_actors(
-            self._actors)
-        query_results.wait()
+        query_results_p = self.multiprocessing_pool.map_async(
+            get_actor_value,
+            self._actors
+        )
+        try:
+            query_results = query_results_p.get(9999999)
+        except KeyboardInterrupt as exc:
+            return
         result = sum([
             int(body)
-            for _t, _t, body in query_results.get()
+            for _t, _t, body in query_results
+            # pass a timeout to multiprocessing to fix bug
         ])
         return result
 
@@ -320,7 +305,7 @@ class RemoteActor(AbstractActor):
             request_result = urllib2.urlopen(url,
                 timeout=self.get_timeout).read()
         except urllib2.URLError as exc:
-            raise urllib2.URLError(
+            raise ConnectionError(
                 '{0} {1}'.format(self._uri, exc.reason))
 
         actor_value = json.loads(request_result)['value']
@@ -334,7 +319,7 @@ class RemoteActor(AbstractActor):
         except urllib2.HTTPError as exc:
             raise NotSolvable('400 %s' % exc)
         except urllib2.URLError as exc:
-            raise urllib2.URLError(
+            raise ConnectionError(
                 '{0} {1}'.format(self._uri, exc.reason))
 
         actor_value_range = set(
@@ -358,7 +343,7 @@ class RemoteActor(AbstractActor):
         except urllib2.HTTPError as exc:
             raise NotSolvable('400 %s' % exc)
         except urllib2.URLError as exc:
-            raise urllib2.URLError(
+            raise ConnectionError(
                 '{0} {1}'.format(self._uri, exc.reason))
 
         actor_value = json.loads(request_result)['value']

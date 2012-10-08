@@ -40,7 +40,7 @@ def get_parser():
 
     parser.add_argument('--log-requests', action="store_true",
         help=("Logs requests to std_err. Influences server speed negatively!")
-    )    
+    )
 
     parser.add_argument('--dry-run', action="store_true",
         help=("Don't do anything, just print parsed parameters"))

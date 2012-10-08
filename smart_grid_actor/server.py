@@ -5,8 +5,30 @@ import socket
 import eventlet
 import eventlet.wsgi
 
+from smart_grid_actor.actor import ConnectionError
+
+
+import multiprocessing
+import multiprocessing.pool
+
+
+# To bypass the "daemon-process not allowed to have
+# child processes" restriction: introduce own Pool implementation
+class NoDaemonProcess(multiprocessing.Process):
+    # 'daemon' attribute should always return False
+    _get_daemon = lambda self: False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+# sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is a wrapper function, not a proper class.
+class CustomPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
+
 
 class Return400(Exception):
+    pass
+class Return500(Exception):
     pass
 
 def return_301(start_response, response_headers):
@@ -31,6 +53,11 @@ def return_406(start_response, response_headers, msg):
 def return_400(start_response, response_headers, msg):
     response_headers.append(('Content-Type', 'text/html'))
     start_response('400 Bad Request', response_headers)
+    return [msg]
+
+def return_500(start_response, response_headers, msg):
+    response_headers.append(('Content-Type', 'text/html'))
+    start_response('500 Internal Error', response_headers)
     return [msg]
 
 
@@ -60,8 +87,11 @@ def get_value_range(environ, actor):
 
 
 def get_value(environ, actor):
-    return {'value': actor.get_value()}
-
+    try:
+        return {'value': actor.get_value()}
+    except ConnectionError as exc:
+        print "Error connecting to actor",exc.message
+        raise Return500("A subgrid participant did not respond")
 
 def set_value(environ, actor):
     data = environ['wsgi.input'].read()
@@ -72,7 +102,6 @@ def set_value(environ, actor):
         print exc
         raise Return400("Input error: %s" % exc.message)
     except Exception as exc:
-        print exc
         raise Return400("Unknown Input error: %s" % exc)
 
     return get_value(environ, actor)
@@ -114,7 +143,7 @@ def get_application(actor, host_uri):
                 'text/json',
                 'application/json',
                 '*/*',
-                # TODO: wsa genau?
+                # TODO: negotiate more?
                 ]:
                 pass
             else:
@@ -131,6 +160,8 @@ def get_application(actor, host_uri):
                 return return_json_200(output_dct=output_dct, **kw)
             except Return400 as exc:
                 return return_400(msg=exc.message, **kw)
+            except Return500 as exc:
+                return return_500(msg=exc.message, **kw)
         else:
             return return_405(msg=u'Allowed methods: {0}'.format(
                 u" ".join([m.upper() for m in method_handlers.keys()])),
@@ -169,14 +200,13 @@ def start_actor_server(
 
     application = get_application(actor, host_uri)
 
-    if start_in_background_thread == True:
-        if log_to_std_err:
-            logger = None
-        else:
-            import StringIO
-            logger = StringIO.StringIO()
+    if log_to_std_err:
+        logger = None
+    else:
+        import StringIO
+        logger = StringIO.StringIO()
 
-        from smart_grid_actor.actor import NoDaemonProcess
+    if start_in_background_thread == True:
         process = NoDaemonProcess(
             target=eventlet.wsgi.server,
             args=(sock, application),
@@ -187,7 +217,10 @@ def start_actor_server(
         return port, process
     else:
         try:
-            eventlet.wsgi.server(sock, application)
+            eventlet.wsgi.server(
+                sock, application,
+                log=logger
+            )
         except (KeyboardInterrupt, SystemExit):
             print 'Server stopped.'
             raise
