@@ -34,6 +34,17 @@ def get_parser():
     return parser
 
 
+def create_actor(value_range, value):
+    actor = Actor(
+        value=value,
+        value_range=value_range
+    )
+    print "Actor: value_range={0}, value={1}".format(
+        list(actor.get_value_range()), actor.get_value()
+    )
+    return actor
+
+
 def start_the_actor_server(
         host_name,
         port,
@@ -42,13 +53,7 @@ def start_the_actor_server(
         log_requests,
         dry_run=False
         ):
-    actor = Actor(
-        value=value,
-        value_range=value_range
-    )
-    print "Actor: value_range={0}, value={1}".format(
-        list(actor.get_value_range()), actor.get_value()
-    )
+    actor = create_actor(value_range=value_range, value=value)
 
     kw = dict(
         host_port_tuple=(host_name, port),

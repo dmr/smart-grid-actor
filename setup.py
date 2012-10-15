@@ -17,6 +17,7 @@ setup(
     entry_points={
         'console_scripts': [
             'smart_grid_actor = smart_grid_actor:main',
+            'smart_grid_actor_batch_starter = smart_grid_actor.batch_starter:main',
         ],
     },
 
