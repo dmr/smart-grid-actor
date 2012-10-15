@@ -182,12 +182,19 @@ def start_actor_server(
         sock = eventlet.listen(host_port_tuple)
     except socket.error as (err_num, err_str):
         if err_num == 48:
-            print ('Port "{0}" is already in use --> start '
+            raise Exception(
+                ('Port "{0}" is already in use --> start '
                 'with "--exclude {0}"? --> Not starting '
                 'server on {0}.').format(host_port_tuple[1])
-            import sys
-            sys.exit(1)
+            )
         raise
+
+    # the port cannot be reused within the same process.
+    # settings
+    #from _socket import SOL_SOCKET, SO_REUSEADDR, SO_REUSEPORT
+    #sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    #sock.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
+    # does not solve the issue.
 
     port = sock.getsockname()[1]
 
