@@ -1,5 +1,4 @@
 from smart_grid_actor.actor import NotSolvable
-from smart_grid_actor.server import CustomPool
 
 
 def assure_is_int(test_class_instance, value, expected_value):
@@ -55,11 +54,3 @@ class AbstractInterface(object):
         )
 
         assure_is_int(self, self.a1.get_value(), 1)
-
-
-class PoolMixin(object):
-    def setUp(self):
-        self.pool = CustomPool(4)
-    def tearDown(self):
-        self.pool.terminate()
-        self.pool.join()

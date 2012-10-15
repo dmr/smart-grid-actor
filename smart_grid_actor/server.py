@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
 import json
 import socket
 
@@ -87,7 +89,7 @@ def get_value(environ, actor):
     try:
         return {'value': actor.get_value()}
     except ConnectionError as exc:
-        print "Error connecting to actor",exc.message
+        print("Error connecting to actor",exc.message)
         raise Return500("A subgrid participant did not respond")
 
 def set_value(environ, actor):
@@ -96,7 +98,6 @@ def set_value(environ, actor):
     try:
         actor.set_value(data)
     except actor.NotSolvable as exc:
-        print exc
         raise Return400("Input error: %s" % exc.message)
     except Exception as exc:
         raise Return400("Unknown Input error: %s" % exc)
@@ -199,7 +200,7 @@ def start_actor_server(
     port = sock.getsockname()[1]
 
     host_uri = 'http://{0}:{1}'.format(host_port_tuple[0], port)
-    print "Running actor server on {0}".format(host_uri)
+    print("Running actor server on {0}".format(host_uri))
 
     application = get_application(actor, host_uri)
 
@@ -225,5 +226,5 @@ def start_actor_server(
                 log=logger
             )
         except (KeyboardInterrupt, SystemExit):
-            print 'Server stopped.'
+            print('Server stopped.')
             raise

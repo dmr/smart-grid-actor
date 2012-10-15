@@ -19,7 +19,7 @@ def do_parser_test(
         expected_port=default_port
         ):
     parsed_args = get_parser().parse_args(string.split())
-    print parsed_args
+    #print parsed_args
     test_instance.assertEqual(
         parsed_args.host_name, expected_host_name,
         msg=parsed_args)

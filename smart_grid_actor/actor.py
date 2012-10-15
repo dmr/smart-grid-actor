@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import time
 
 
@@ -28,21 +29,11 @@ class ConnectionError(Exception):
     pass
 
 
-def get_actor_value(actor):
-    try:
-        time_before_request = time.time()
-        actor_value = actor.get_value()
-        time_after_request = time.time()
-        return time_before_request, time_after_request, actor_value
-    except KeyboardInterrupt:
-        pass
-
-
 class AbstractActor(object):
     NotSolvable = NotSolvable
 
     def log(self, msg):
-        print time.time(), self.id, msg
+        print(time.time(), self.id, msg)
 
     def __repr__(self):
         return u"<{0}: {1}>".format(

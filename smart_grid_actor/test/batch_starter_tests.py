@@ -15,7 +15,7 @@ def do_parser_test(
         server_ports=None
         ):
     parsed_args = get_batch_starter_parser().parse_args(string.split())
-    print parsed_args
+    #print parsed_args
 
     parsed_args_dct = parsed_args.__dict__
     kw = parsed_args_dct.pop('execute_function')(
