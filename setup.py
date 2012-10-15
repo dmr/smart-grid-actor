@@ -12,7 +12,10 @@ setup(
     description='An implementation for a Smart Grid Actor',
     long_description=open('README.md').read(),
 
-    packages=['smart_grid_actor'],
+    packages=[
+        'smart_grid_actor',
+        'smart_grid_actor.test'
+    ],
 
     entry_points={
         'console_scripts': [
