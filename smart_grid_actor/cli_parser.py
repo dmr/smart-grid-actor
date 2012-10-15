@@ -6,13 +6,16 @@ from smart_grid_actor.server import start_actor_server, CustomPool
 
 def add_actor_base_parser_params(parser):
     parser.add_argument('--host-name', action="store",
-        default='localhost',
         type=str, help=("Hostname/IP address to bind the "
-            "server socket to. Default: '127.0.0.1'"))
+            "server socket to. Default: <your ip address>"),
+        default=''
+    )
     parser.add_argument('-p', '--port', type=int,
         help=("Port to bind the "
-             "server socket to. Default: 9001"),
-        default=9001)
+             "server socket to. Default: a free port "
+             "returned by your operating system"),
+        default=0
+    )
 
     parser.add_argument('--log-requests', action="store_true",
         help=("Logs requests to std_err (Slow)")

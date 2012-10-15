@@ -177,7 +177,7 @@ def start_actor_server(
     if not host_port_tuple:
         # if no specific port is given,
         # run on free port
-        host_port_tuple = ('localhost', 0)
+        host_port_tuple = ('', 0)
 
     try:
         sock = eventlet.listen(host_port_tuple)
@@ -199,7 +199,12 @@ def start_actor_server(
 
     port = sock.getsockname()[1]
 
-    host_uri = 'http://{0}:{1}'.format(host_port_tuple[0], port)
+    if host_port_tuple[0] == '':
+        host_name = socket.gethostbyname(socket.gethostname())
+    else:
+        host_name = host_port_tuple[0]
+
+    host_uri = 'http://{0}:{1}'.format(host_name, port)
     print("Running actor server on {0}".format(host_uri))
 
     application = get_application(actor, host_uri)

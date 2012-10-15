@@ -7,6 +7,7 @@ import argparse
 from smart_grid_actor.server import start_actor_server
 from smart_grid_actor.cli_parser import add_actor_server_params, create_actor
 
+
 def save_to_file(file, content, force=False):
     if force:
         if os.path.exists(file):

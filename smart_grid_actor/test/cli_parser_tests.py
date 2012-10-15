@@ -6,26 +6,26 @@ from smart_grid_actor.actor import Actor
 from smart_grid_actor.cli_parser import get_parser
 
 
-default_host_name = 'localhost'
-default_port = 9001
-
-
 def do_parser_test(
         test_instance,
         string,
         expected_actor=None,
         expect_exception=None,
-        expected_host_name=default_host_name,
-        expected_port=default_port
+        expected_host_name=None,
+        expected_port=None
         ):
     parsed_args = get_parser().parse_args(string.split())
     #print parsed_args
-    test_instance.assertEqual(
-        parsed_args.host_name, expected_host_name,
-        msg=parsed_args)
-    test_instance.assertEqual(
-        parsed_args.port, expected_port,
-        msg=parsed_args)
+
+    if expected_host_name:
+        test_instance.assertEqual(
+            parsed_args.host_name, expected_host_name,
+            msg=parsed_args)
+
+    if expected_port:
+        test_instance.assertEqual(
+            parsed_args.port, expected_port,
+            msg=parsed_args)
 
     parsed_args_dct = parsed_args.__dict__
 
