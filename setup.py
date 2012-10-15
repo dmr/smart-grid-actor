@@ -28,8 +28,8 @@ setup(
         'argparse',
         'eventlet',
 
-        'spec', # for tests
-        'requests', # for tests
+        #'spec', # for tests
+        #'requests', # for tests
     ],
 
     classifiers=[
