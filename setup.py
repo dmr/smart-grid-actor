@@ -23,12 +23,7 @@ setup(
     zip_safe=False,
     platforms='any',
 
-    dependency_links = [
-        'https://github.com/dmr/csp-solver/tarball/master#egg=csp_solver'
-    ],
-
     install_requires=[
-        'csp_solver',
         'argparse',
         'eventlet',
 

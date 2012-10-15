@@ -3,6 +3,7 @@
 import unittest
 
 from smart_grid_actor.actor import AbstractActor, Actor
+from smart_grid_actor.test.actor_tests import ActorInterface
 
 
 def test_actor_equality():
@@ -40,10 +41,6 @@ class TestAbstractActorInterface(unittest.TestCase):
 
 
 def test_if_interface_tests_are_complete():
-    from actor_tests import ActorInterface
-    from controller_actor_tests import ControllerActorInterface
-    from remove_actor_tests import RemoteActorInterface
-
     methods_for_complete_interface_test = [
         "test_get_value",
         "test_get_value_range",
@@ -54,9 +51,7 @@ def test_if_interface_tests_are_complete():
         "test_set_value_string_invalid"
     ]
 
-    for test_cls in (ActorInterface,
-                     ControllerActorInterface,
-                     RemoteActorInterface):
+    for test_cls in [ActorInterface]:
         for method_name in methods_for_complete_interface_test:
             assert hasattr(test_cls, method_name),\
             "{0} not in {1}".format(method_name, test_cls)

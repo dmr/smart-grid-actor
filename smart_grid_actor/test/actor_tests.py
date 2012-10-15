@@ -7,7 +7,7 @@ from smart_grid_actor.actor import (
     used_ids
 )
 
-from _utils import AbstractInterface
+from smart_grid_actor.test._utils import AbstractInterface
 
 
 class ActorIdGeneration(unittest.TestCase):
@@ -64,6 +64,7 @@ class ActorInterface(AbstractInterface, unittest.TestCase):
 
 class ActorInit(unittest.TestCase):
     def test_valid_init_vr_no_value_returns_min_vr(self):
+        # value is set implicitly
         vr = [1,2]
         actor = Actor(vr)
         assert actor.id

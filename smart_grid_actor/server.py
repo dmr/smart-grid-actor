@@ -33,10 +33,7 @@ class Return500(Exception):
 
 def return_301(start_response, response_headers):
     response_headers.append(('Content-Type', 'text/html'))
-
-    # TODO: soll das so sein?
     response_headers.append(('Location', '/'))
-
     start_response('301 Moved Permanently', response_headers)
     return ['Moved permanently: /']
 
@@ -143,7 +140,6 @@ def get_application(actor, host_uri):
                 'text/json',
                 'application/json',
                 '*/*',
-                # TODO: negotiate more?
                 ]:
                 pass
             else:
