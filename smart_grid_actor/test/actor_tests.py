@@ -14,9 +14,11 @@ class ActorIdGeneration(unittest.TestCase):
     def test_generates_increasing_numbers(self):
         a1 = AbstractActor()
         a2 = AbstractActor()
-        self.assertGreater(a2.id,a1.id)
+
+        self.assert_(a2.id > a1.id)
+
         a3 = AbstractActor()
-        self.assertGreater(a3.id,a2.id)
+        self.assert_(a3.id > a2.id)
 
     def test_converts_to_int(self):
         # overwrite original storage to avoid conclicts
