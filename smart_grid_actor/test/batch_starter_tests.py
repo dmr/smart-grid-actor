@@ -3,8 +3,7 @@
 import unittest
 
 from smart_grid_actor.batch_starter import (
-    get_batch_starter_parser,
-    start_actor_servers
+    get_batch_starter_parser
 )
 
 
@@ -18,27 +17,28 @@ def do_parser_test(
     #print parsed_args
 
     parsed_args_dct = parsed_args.__dict__
-    kw = parsed_args_dct.pop('execute_function')(
+    lst_of_started_servers = parsed_args_dct.pop('execute_function')(
         stop_servers_after_json_save=True,
         **parsed_args_dct
     )
 
-    for _p, process in kw:
+    for _, process in lst_of_started_servers:
         if process.is_alive():
             import time
             time.sleep(.1)
             assert not process.is_alive()
 
     import pprint
-    pprint.pprint(kw)
-
-    started_servers_ports = [port for port, _process in kw]
+    pprint.pprint(lst_of_started_servers)
 
     if server_count:
-        test_instance.assertEqual(len(started_servers_ports), server_count)
+        test_instance.assertEqual(len(lst_of_started_servers), server_count)
 
     if server_ports:
-        test_instance.assertEqual(started_servers_ports, server_ports)
+        test_instance.assertEqual([
+            port
+            for (host_name, port), process in lst_of_started_servers
+        ], server_ports)
 
 do_parser_test.__test__ = False
 

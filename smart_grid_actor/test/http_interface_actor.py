@@ -39,7 +39,7 @@ class HttpInterfaceTestActor(unittest.TestCase):
     def setUp(self):
         self.vr = [1,2]
         self.a1 = Actor(value_range=[1,2], value=1)
-        self.port, server_process = start_actor_server(
+        (host_name, self.port), server_process = start_actor_server(
             actor=self.a1,
             start_in_background_thread=True,
             log_to_std_err=True

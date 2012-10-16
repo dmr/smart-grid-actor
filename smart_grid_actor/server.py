@@ -167,11 +167,31 @@ def get_application(actor, host_uri):
     return application
 
 
+def get_host_name(host_name_str):
+    if host_name_str == "":
+        try:
+            host_name = socket.gethostbyname(
+                socket.gethostname()
+            )
+        except socket.gaierror as exc:
+            tmp_conn = socket.socket(
+                socket.AF_INET, socket.SOCK_DGRAM
+            )
+            tmp_conn.connect(("google.com",80))
+            host_name = tmp_conn.getsockname()[0]
+            tmp_conn.close()
+
+    else:
+        host_name = host_name_str
+    return host_name
+
+
 def start_actor_server(
         actor,
         host_port_tuple=None,
         start_in_background_thread=False,
-        log_to_std_err=False
+        log_to_std_err=False,
+        application=None
         ):
 
     if not host_port_tuple:
@@ -190,24 +210,15 @@ def start_actor_server(
             )
         raise
 
-    # the port cannot be reused within the same process.
-    # settings
-    #from _socket import SOL_SOCKET, SO_REUSEADDR, SO_REUSEPORT
-    #sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    #sock.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
-    # does not solve the issue.
-
     port = sock.getsockname()[1]
 
-    if host_port_tuple[0] == '':
-        host_name = socket.gethostbyname(socket.gethostname())
-    else:
-        host_name = host_port_tuple[0]
+    host_name = get_host_name(host_port_tuple[0])
 
     host_uri = 'http://{0}:{1}'.format(host_name, port)
-    print("Running actor server on {0}".format(host_uri))
+    print("Running server on {0}".format(host_uri))
 
-    application = get_application(actor, host_uri)
+    if not application:
+        application = get_application(actor, host_uri)
 
     if log_to_std_err:
         logger = None
@@ -223,7 +234,7 @@ def start_actor_server(
         )
         process.daemon = True
         process.start()
-        return port, process
+        return (host_name, port), process
     else:
         try:
             eventlet.wsgi.server(

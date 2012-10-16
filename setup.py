@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='Smart-Grid-Actor',
-    version='0.5',
+    version='0.5.1',
     url='https://github.com/dmr/smart-grid-actor',
     license='MIT',
     author='Daniel Rech',

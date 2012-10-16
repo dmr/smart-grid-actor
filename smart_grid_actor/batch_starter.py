@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import urllib2
+import urlparse
 import os
 import argparse
 
@@ -32,10 +34,13 @@ def start_actor_servers(
         start_port=None,
         exclude_ports=None,
         save_to_json=None,
+        callback_uri=None,
         force=False,
         stop_servers_after_json_save=False # for testing
         ):
 
+    # handling of host_name is inconsistent: only used if
+    # start_port is set.
     if start_port:
         port_range = range(start_port,
             start_port+number)
@@ -67,25 +72,51 @@ def start_actor_servers(
             for _ in range(number)
         ]
 
-    started_servers = []
-    for kw in servers_to_start:
-        port, process = start_actor_server(
+    lst_of_started_servers = [
+        # will respond with
+        # (real_host_name, port), process
+        start_actor_server(
             start_in_background_thread=True,
             **kw
         )
-        started_servers.append((port, process))
+        for kw in servers_to_start
+    ]
 
-    print "{0} servers started".format(len(started_servers))
+    print "{0} servers started".format(len(lst_of_started_servers))
+
+    lst_of_started_servers_uris = [
+        u"http://{0}:{1}/".format(real_host_name, port)
+        for (real_host_name, port), _process in lst_of_started_servers
+    ]
 
     if save_to_json:
         print "Saving used ports to file '{0}'".format(save_to_json)
-        json_content = json.dumps([port for port, _process in started_servers])
+        json_content = json.dumps(lst_of_started_servers_uris)
         save_to_file(save_to_json, json_content, force=force)
 
+    if callback_uri:
+        print "POST to callback URI '{0}': {1}".format(
+            callback_uri,
+            lst_of_started_servers_uris
+        )
+        request = urllib2.Request(
+            callback_uri,
+            # a request containing "data" will be a POST request
+            data=json.dumps(lst_of_started_servers_uris)
+        )
+        try:
+            resp = urllib2.urlopen(request)
+            if resp.code == 200:
+                print "POST successful."
+
+        except urllib2.URLError as exc:
+            print exc
+            print "Error connecting to callback URI!"
+
     if stop_servers_after_json_save:
-        for _port, process in started_servers:
+        for _, process in lst_of_started_servers:
             process.terminate()
-        return started_servers
+        return lst_of_started_servers
 
     try:
         print "I am done starting. Now waiting for KeyboardInterrupt or SystemExit."
@@ -94,6 +125,18 @@ def start_actor_servers(
             time.sleep(600)
     except (KeyboardInterrupt, SystemExit):
         print "Exiting..."
+
+
+def check_uri(uri):
+    parsed = urlparse.urlparse(uri)
+    if not parsed.scheme in ["http", "https"]:
+        raise argparse.ArgumentTypeError(
+            "%r is not a valid URL. scheme must be http(s)!" % uri)
+
+    # cut off fragment
+    uri = urlparse.urlunparse((parsed.scheme, parsed.netloc, parsed.path,
+                               parsed.params, parsed.query, ""))
+    return uri
 
 
 def get_batch_starter_parser():
@@ -123,6 +166,14 @@ def get_batch_starter_parser():
         help=(
             'Overwrite a file at save-to-json without asking'
             )
+    )
+
+    parser.add_argument('--callback-uri',
+        type=check_uri,
+        help=(
+            "After the servers are started issue a POST request "
+            "including used ports to this URI"
+        )
     )
 
     parser.set_defaults(execute_function=start_actor_servers)

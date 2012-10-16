@@ -56,11 +56,9 @@ def start_the_actor_server(
         log_requests,
         dry_run=False
         ):
-    actor = create_actor(value_range=value_range, value=value)
-
     kw = dict(
         host_port_tuple=(host_name, port),
-        actor=actor,
+        actor=create_actor(value_range=value_range, value=value),
         log_to_std_err=log_requests
     )
     if dry_run:
