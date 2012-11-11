@@ -1,5 +1,6 @@
 import json
 import unittest
+import urlparse
 
 import requests
 
@@ -39,10 +40,9 @@ class HttpInterfaceTestActor(unittest.TestCase):
     def setUp(self):
         self.vr = [1,2]
         self.a1 = Actor(value_range=[1,2], value=1)
-        (host_name, self.port), server_process = start_actor_server(
+        self.uri, server_process = start_actor_server(
             actor=self.a1,
-            start_in_background_thread=True,
-            log_to_std_err=True
+            start_in_background_thread=True
         )
         self.processes = [server_process]
 
@@ -51,16 +51,11 @@ class HttpInterfaceTestActor(unittest.TestCase):
             p.terminate()
             p.join() # frees up the socket for next scenario
 
-    def url(self, path):
-        return u"http://{host}:{port}{path}".format(
-            host='localhost', port=self.port, path=path
-        )
-
     def query(self, path):
-        return requests.get(self.url(path), allow_redirects=False)
+        return requests.get(urlparse.urljoin(self.uri, path), allow_redirects=False)
 
     def update(self, path, put_data):
-        return requests.put(self.url(path), put_data,
+        return requests.put(urlparse.urljoin(self.uri, path), put_data,
             allow_redirects=False
         )
 

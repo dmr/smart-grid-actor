@@ -59,10 +59,10 @@ def start_the_actor_server(
     kw = dict(
         host_port_tuple=(host_name, port),
         actor=create_actor(value_range=value_range, value=value),
-        log_to_std_err=log_requests
+        log_requests=log_requests
     )
     if dry_run:
-        print "Would start an actor server on {0} but this is a test run".format(kw)
+        print "Would start an actor server with {0} but this is a test run".format(kw)
         return kw
     start_actor_server(**kw)
 

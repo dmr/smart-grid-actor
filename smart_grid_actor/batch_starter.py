@@ -85,8 +85,7 @@ def start_actor_servers(
     print "{0} servers started".format(len(lst_of_started_servers))
 
     lst_of_started_servers_uris = [
-        u"http://{0}:{1}/".format(real_host_name, port)
-        for (real_host_name, port), _process in lst_of_started_servers
+        uri for uri, _process in lst_of_started_servers
     ]
 
     if save_to_json:

@@ -168,9 +168,16 @@ def get_host_name(host_name_str):
     return host_name
 
 
-def start_bjoern_server(wsgi_application, host_port_tuple):
+def start_bjoern_server(wsgi_application, host_name, port):
     import bjoern
-    bjoern.run(wsgi_application, *host_port_tuple)
+    bjoern.run(wsgi_application, host_name, port)
+
+
+#def start_eventlet_server(wsgi_application, host_port_tuple):
+#    import eventlet
+#    import eventlet.wsgi
+#    sock = eventlet.listen(host_port_tuple)
+#    eventlet.wsgi.server(sock, wsgi_application)
 
 
 def get_free_port(host_port_tuple):
@@ -200,7 +207,7 @@ def start_actor_server(
         actor,
         host_port_tuple=None,
         start_in_background_thread=False,
-        log_to_std_err=False
+        log_requests=False
         ):
 
     if not host_port_tuple:
@@ -208,31 +215,28 @@ def start_actor_server(
         # run on free port
         host_port_tuple = ('', 0)
 
-    if host_port_tuple[1] == 0:
-        host_port_tuple = (
-            host_port_tuple[0],
-            get_free_port(host_port_tuple)
-        )
-
     port = host_port_tuple[1]
+    if host_port_tuple[1] == 0:
+        port = get_free_port(host_port_tuple)
 
     host_name = get_host_name(host_port_tuple[0])
+
     host_uri = 'http://{0}:{1}'.format(host_name, port)
     print("Running server on {0}".format(host_uri))
 
-    wsgi_application = get_wsgi_application(actor, host_uri)
+    wsgi_application = get_wsgi_application(
+        actor, host_uri
+    )
 
     if start_in_background_thread == True:
         process = Process(
             target=start_bjoern_server,
-            args=(wsgi_application, host_port_tuple)
-            #target=eventlet.wsgi.server,
-            #args=(sock, wsgi_application),
-            #kwargs=dict(log=logger)
+            args=(wsgi_application,
+                  host_name, port)
         )
         process.daemon = True
         process.start()
-        return host_port_tuple, process
+        return host_uri, process
 
-    start_bjoern_server(wsgi_application, host_port_tuple)
-    #start_eventlet_server(wsgi_application, host_port_tuple)
+    start_bjoern_server(wsgi_application,
+        host_name, port)

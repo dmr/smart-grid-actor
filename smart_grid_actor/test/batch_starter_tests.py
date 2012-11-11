@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import unittest
+import urlparse
 
 from smart_grid_actor.batch_starter import (
     get_batch_starter_parser
@@ -36,8 +37,8 @@ def do_parser_test(
 
     if server_ports:
         test_instance.assertEqual([
-            port
-            for (host_name, port), process in lst_of_started_servers
+            urlparse.urlparse(uri).port
+            for uri, process in lst_of_started_servers
         ], server_ports)
 
 do_parser_test.__test__ = False
