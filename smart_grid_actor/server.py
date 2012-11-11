@@ -156,10 +156,13 @@ def get_host_name(host_name_str):
             tmp_conn = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM
             )
-            tmp_conn.connect(("google.com",80))
-            host_name = tmp_conn.getsockname()[0]
-            tmp_conn.close()
-
+            try:
+                tmp_conn.connect(("kit.edu",80))
+                host_name = tmp_conn.getsockname()[0]
+                tmp_conn.close()
+            except socket.gaierror as exc:
+                print("Cannot determine own hostname")
+                host_name = host_name_str
     else:
         host_name = host_name_str
     return host_name
