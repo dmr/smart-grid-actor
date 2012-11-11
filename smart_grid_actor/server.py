@@ -186,6 +186,27 @@ def get_host_name(host_name_str):
     return host_name
 
 
+def get_free_port(host_port_tuple):
+    """ Returns a free port by binding a socket
+    and closing it again
+    """
+    try:
+        sock = socket.socket()
+        sock.bind(host_port_tuple)
+    except socket.error as (err_num, err_str):
+        if err_num == 48:
+            raise Exception(
+                ('Port "{0}" is already in use --> start '
+                 'with "--exclude {0}"? --> Not starting '
+                 'server on {0}.').format(host_port_tuple[1])
+            )
+        raise
+
+    port = sock.getsockname()[1]
+
+    sock.close()
+
+    return port
 def start_actor_server(
         actor,
         host_port_tuple=None,
@@ -199,18 +220,13 @@ def start_actor_server(
         # run on free port
         host_port_tuple = ('', 0)
 
-    try:
-        sock = eventlet.listen(host_port_tuple)
-    except socket.error as (err_num, err_str):
-        if err_num == 48:
-            raise Exception(
-                ('Port "{0}" is already in use --> start '
-                'with "--exclude {0}"? --> Not starting '
-                'server on {0}.').format(host_port_tuple[1])
-            )
-        raise
+    if host_port_tuple[1] == 0:
+        host_port_tuple = (
+            host_port_tuple[0],
+            get_free_port(host_port_tuple)
+        )
 
-    port = sock.getsockname()[1]
+    port = host_port_tuple[1]
 
     host_name = get_host_name(host_port_tuple[0])
 
