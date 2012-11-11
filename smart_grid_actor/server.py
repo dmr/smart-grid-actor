@@ -5,9 +5,6 @@ import json
 from multiprocessing.process import Process
 import socket
 
-import eventlet
-import eventlet.wsgi
-
 from smart_grid_actor.actor import ConnectionError
 
 
@@ -75,20 +72,19 @@ def get_value(environ, actor):
         print("Error connecting to actor",exc.message)
         raise Return500("A subgrid participant did not respond")
 
+
 def set_value(environ, actor):
     data = environ['wsgi.input'].read()
-
     try:
         actor.set_value(data)
     except actor.NotSolvable as exc:
         raise Return400("Input error: %s" % exc.message)
     except Exception as exc:
         raise Return400("Unknown Input error: %s" % exc)
-
     return get_value(environ, actor)
 
 
-def get_application(actor, host_uri):
+def get_wsgi_application(actor, host_uri):
 
     url_map = {
         '/vr/': {
@@ -169,6 +165,11 @@ def get_host_name(host_name_str):
     return host_name
 
 
+def start_bjoern_server(wsgi_application, host_port_tuple):
+    import bjoern
+    bjoern.run(wsgi_application, *host_port_tuple)
+
+
 def get_free_port(host_port_tuple):
     """ Returns a free port by binding a socket
     and closing it again
@@ -190,12 +191,13 @@ def get_free_port(host_port_tuple):
     sock.close()
 
     return port
+
+
 def start_actor_server(
         actor,
         host_port_tuple=None,
         start_in_background_thread=False,
-        log_to_std_err=False,
-        application=None
+        log_to_std_err=False
         ):
 
     if not host_port_tuple:
@@ -212,33 +214,22 @@ def start_actor_server(
     port = host_port_tuple[1]
 
     host_name = get_host_name(host_port_tuple[0])
-
     host_uri = 'http://{0}:{1}'.format(host_name, port)
     print("Running server on {0}".format(host_uri))
 
-    if not application:
-        application = get_application(actor, host_uri)
-
-    if log_to_std_err:
-        logger = None
-    else:
-        import StringIO
-        logger = StringIO.StringIO()
+    wsgi_application = get_wsgi_application(actor, host_uri)
 
     if start_in_background_thread == True:
-            target=eventlet.wsgi.server,
-            args=(sock, application),
         process = Process(
+            target=start_bjoern_server,
+            args=(wsgi_application, host_port_tuple)
+            #target=eventlet.wsgi.server,
+            #args=(sock, wsgi_application),
+            #kwargs=dict(log=logger)
         )
         process.daemon = True
         process.start()
-        return (host_name, port), process
-    else:
-        try:
-            eventlet.wsgi.server(
-                sock, application,
-                log=logger
-            )
-        except (KeyboardInterrupt, SystemExit):
-            print('Server stopped.')
-            raise
+        return host_port_tuple, process
+
+    start_bjoern_server(wsgi_application, host_port_tuple)
+    #start_eventlet_server(wsgi_application, host_port_tuple)

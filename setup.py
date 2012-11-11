@@ -14,7 +14,8 @@ setup(
 
     packages=[
         'smart_grid_actor',
-        'smart_grid_actor.test'
+        'smart_grid_actor.test',
+
     ],
 
     entry_points={
@@ -29,7 +30,7 @@ setup(
 
     install_requires=[
         'argparse',
-        'eventlet',
+        'bjoern'
 
         #'spec', # for tests
         #'requests', # for tests
