@@ -2,30 +2,13 @@
 from __future__ import print_function
 
 import json
+from multiprocessing.process import Process
 import socket
 
 import eventlet
 import eventlet.wsgi
 
 from smart_grid_actor.actor import ConnectionError
-
-
-import multiprocessing
-import multiprocessing.pool
-
-
-# To bypass the "daemon-process not allowed to have
-# child processes" restriction: introduce own Pool implementation
-class NoDaemonProcess(multiprocessing.Process):
-    # 'daemon' attribute should always return False
-    _get_daemon = lambda self: False
-    def _set_daemon(self, value):
-        pass
-    daemon = property(_get_daemon, _set_daemon)
-# sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
-# because the latter is a wrapper function, not a proper class.
-class CustomPool(multiprocessing.pool.Pool):
-    Process = NoDaemonProcess
 
 
 class Return400(Exception):
@@ -243,10 +226,9 @@ def start_actor_server(
         logger = StringIO.StringIO()
 
     if start_in_background_thread == True:
-        process = NoDaemonProcess(
             target=eventlet.wsgi.server,
             args=(sock, application),
-            kwargs=dict(log=logger)
+        process = Process(
         )
         process.daemon = True
         process.start()

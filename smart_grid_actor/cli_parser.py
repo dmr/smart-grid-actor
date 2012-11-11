@@ -1,7 +1,7 @@
 import argparse
 
 from smart_grid_actor.actor import Actor
-from smart_grid_actor.server import start_actor_server, CustomPool
+from smart_grid_actor.server import start_actor_server
 
 
 def add_actor_base_parser_params(parser):

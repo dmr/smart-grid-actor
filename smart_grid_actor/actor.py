@@ -137,7 +137,6 @@ class Actor(AbstractActor):
 
     def set_value(self, new_value):
         set_value = self.validate(new_value)
-
         value_range = self.get_value_range()
         if not set_value in value_range:
             raise NotSolvable(
