@@ -18,6 +18,7 @@ def do_parser_test(
     #print parsed_args
 
     parsed_args_dct = parsed_args.__dict__
+    parsed_args_dct.pop('use_wsgiref_server')
     lst_of_started_servers = parsed_args_dct.pop('execute_function')(
         stop_servers_after_json_save=True,
         **parsed_args_dct
