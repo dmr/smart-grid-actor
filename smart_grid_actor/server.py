@@ -170,7 +170,15 @@ def get_host_name(host_name_str):
 
 def start_bjoern_server(wsgi_application, host_name, port):
     import bjoern
-    bjoern.run(wsgi_application, host_name, port)
+    try: bjoern.run(wsgi_application, host_name, port)
+    except KeyboardInterrupt: pass
+
+
+def start_wsgiref_server(wsgi_application, host_name, port):
+    from wsgiref.simple_server import make_server
+    httpd = make_server(host=host_name, port=port, app=wsgi_application)
+    try: httpd.serve_forever()
+    except KeyboardInterrupt: pass
 
 
 #def start_eventlet_server(wsgi_application, host_port_tuple):
@@ -207,8 +215,11 @@ def start_actor_server(
         actor,
         host_port_tuple=None,
         start_in_background_thread=False,
-        log_requests=False
+        log_requests=False,
+        server_starter=start_bjoern_server
         ):
+    if server_starter != start_bjoern_server:
+        print("Using builtin server (slow)")
 
     if not host_port_tuple:
         # if no specific port is given,
@@ -230,7 +241,7 @@ def start_actor_server(
 
     if start_in_background_thread == True:
         process = Process(
-            target=start_bjoern_server,
+            target=server_starter,
             args=(wsgi_application,
                   host_name, port)
         )
@@ -238,5 +249,5 @@ def start_actor_server(
         process.start()
         return host_uri, process
 
-    start_bjoern_server(wsgi_application,
+    server_starter(wsgi_application,
         host_name, port)
