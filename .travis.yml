@@ -4,7 +4,8 @@ python:
  - "2.7"
 
 install:
- - aptitude install libev-dev -y
+ # bjoern needs to be compiled. dependencies:
+ - sudo aptitude install libev-dev python-dev -y
  - pip install spec requests
  - python setup.py -q install
 
