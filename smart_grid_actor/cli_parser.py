@@ -16,11 +16,9 @@ def add_actor_base_parser_params(parser):
              "returned by your operating system"),
         default=0
     )
-
     parser.add_argument('--log-requests', action="store_true",
         help=("Logs requests to std_err (Slow)")
     )
-
     parser.add_argument('--dry-run', action="store_true",
         help=("Don't do anything, just print parsed parameters"))
 
@@ -57,13 +55,13 @@ def start_the_actor_server(
         dry_run=False,
         use_wsgiref_server=False
         ):
-    kw = dict(
-        host_port_tuple=(host_name, port),
-        actor=create_actor(value_range=value_range, value=value),
-        log_requests=log_requests,
-    )
-    kw['server_starter'] = start_wsgiref_server \
+    kw = {
+        'host_port_tuple': (host_name, port),
+        'actor': create_actor(value_range=value_range, value=value),
+        'log_requests': log_requests,
+        'server_starter': start_wsgiref_server \
             if use_wsgiref_server else start_bjoern_server
+    }
     if dry_run:
         print u"DRY RUN with parameters Parameters: {0}".format(kw)
         return kw

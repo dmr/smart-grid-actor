@@ -84,7 +84,7 @@ def set_value(environ, actor):
     return get_value(environ, actor)
 
 
-def get_wsgi_application(actor, host_uri):
+def get_wsgi_application(actor, host_uri, log_requests=None):
 
     url_map = {
         '/vr/': {
@@ -99,6 +99,12 @@ def get_wsgi_application(actor, host_uri):
     def application(environ, start_response):
         request_method = environ['REQUEST_METHOD'].lower()
         request_url = environ['PATH_INFO']
+
+        if log_requests:
+            import datetime
+            now = datetime.datetime.strftime(
+                datetime.datetime.now(),'%Y%m%d-%H%M%S')
+            print(now, request_method, request_url)
 
         response_headers = [
             ('Host', host_uri),
@@ -203,11 +209,8 @@ def get_free_port(host_port_tuple):
                  'server on {0}.').format(host_port_tuple[1])
             )
         raise
-
     port = sock.getsockname()[1]
-
     sock.close()
-
     return port
 
 
@@ -236,18 +239,17 @@ def start_actor_server(
     print("Running server on {0}".format(host_uri))
 
     wsgi_application = get_wsgi_application(
-        actor, host_uri
+        actor, host_uri,
+        log_requests=log_requests
     )
 
-    if start_in_background_thread == True:
+    if start_in_background_thread:
         process = Process(
             target=server_starter,
-            args=(wsgi_application,
-                  host_name, port)
+            args=(wsgi_application, host_name, port)
         )
         process.daemon = True
         process.start()
         return host_uri, process
 
-    server_starter(wsgi_application,
-        host_name, port)
+    server_starter(wsgi_application, host_name, port)
