@@ -6,7 +6,7 @@ python:
 install:
  # bjoern needs to be compiled. dependencies:
  - sudo aptitude install libev-dev python-dev -y
- - pip install spec requests
+ - pip install unittest2 spec requests
  - python setup.py -q install
 
 script: nosetests

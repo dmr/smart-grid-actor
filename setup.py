@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='Smart-Grid-Actor',
-    version='0.7.0',
+    version='1.0.0',
     url='https://github.com/dmr/smart-grid-actor',
     license='MIT',
     author='Daniel Rech',
@@ -15,7 +15,6 @@ setup(
     packages=[
         'smart_grid_actor',
         'smart_grid_actor.test',
-
     ],
 
     entry_points={
@@ -31,8 +30,6 @@ setup(
     install_requires=[
         'argparse',
         'bjoern'
-        #'spec', # for tests
-        #'requests', # for tests
     ],
 
     classifiers=[
