@@ -40,8 +40,11 @@ def return_500(start_response, response_headers, msg):
     return [msg]
 
 
-def return_json_200(start_response, response_headers,
-                    output_dct):
+def return_json_200(
+        start_response,
+        response_headers,
+        output_dct
+        ):
     output = json.dumps(output_dct)
     response_headers.append(
         ('Content-Type', 'application/json'))
@@ -50,14 +53,6 @@ def return_json_200(start_response, response_headers,
     start_response('200 OK', response_headers)
 
     return [output]
-
-
-#def return_rdf_200(start_response, response_headers, output_dct):
-#    dct_key_to_rdf_map = {
-#        'value_range': 'https://example.com/Actor/value_range',
-#        'value': 'https://example.com/Actor/value',
-#    }
-#    assert 0, 'implement'
 
 
 def get_value_range(environ, actor):
@@ -69,7 +64,7 @@ def get_value(environ, actor):
     try:
         return {'value': actor.get_value()}
     except ConnectionError as exc:
-        print("Error connecting to actor",exc.message)
+        print("Error connecting to actor", exc.message)
         raise Return500("A subgrid participant did not respond")
 
 
@@ -85,7 +80,6 @@ def set_value(environ, actor):
 
 
 def get_wsgi_application(actor, host_uri, log_requests=None):
-
     url_map = {
         '/vr/': {
             'get': get_value_range,
@@ -139,14 +133,19 @@ def get_wsgi_application(actor, host_uri, log_requests=None):
             try:
                 output_dct = method_handlers[request_method](
                     environ, actor)
-                return return_json_200(output_dct=output_dct, **kw)
+                return return_json_200(
+                    output_dct=output_dct, **kw
+                )
             except Return400 as exc:
                 return return_400(msg=exc.message, **kw)
             except Return500 as exc:
                 return return_500(msg=exc.message, **kw)
         else:
-            return return_405(msg=u'Allowed methods: {0}'.format(
-                u" ".join([m.upper() for m in method_handlers.keys()])),
+            return return_405(
+                msg=u'Allowed methods: {0}'.format(
+                    u" ".join([m.upper()
+                   for m in method_handlers.keys()])
+                ),
                 **kw
             )
     return application
@@ -158,15 +157,15 @@ def get_host_name(host_name_str):
             host_name = socket.gethostbyname(
                 socket.gethostname()
             )
-        except socket.gaierror as exc:
+        except socket.gaierror:
             tmp_conn = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM
             )
             try:
-                tmp_conn.connect(("kit.edu",80))
+                tmp_conn.connect(("kit.edu", 80))
                 host_name = tmp_conn.getsockname()[0]
                 tmp_conn.close()
-            except socket.gaierror as exc:
+            except socket.gaierror:
                 print("Cannot determine own hostname")
                 host_name = host_name_str
     else:
@@ -176,22 +175,21 @@ def get_host_name(host_name_str):
 
 def start_bjoern_server(wsgi_application, host_name, port):
     import bjoern
-    try: bjoern.run(wsgi_application, host_name, port)
-    except KeyboardInterrupt: pass
+    try:
+        bjoern.run(wsgi_application, host_name, port)
+    except KeyboardInterrupt:
+        pass
 
 
-def start_wsgiref_server(wsgi_application, host_name, port):
+def start_wsgiref_server(
+        wsgi_application, host_name, port):
     from wsgiref.simple_server import make_server
-    httpd = make_server(host=host_name, port=port, app=wsgi_application)
-    try: httpd.serve_forever()
-    except KeyboardInterrupt: pass
-
-
-#def start_eventlet_server(wsgi_application, host_port_tuple):
-#    import eventlet
-#    import eventlet.wsgi
-#    sock = eventlet.listen(host_port_tuple)
-#    eventlet.wsgi.server(sock, wsgi_application)
+    httpd = make_server(host=host_name,
+        port=port, app=wsgi_application)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
 
 
 def get_free_port(host_port_tuple):
@@ -201,7 +199,7 @@ def get_free_port(host_port_tuple):
     try:
         sock = socket.socket()
         sock.bind(host_port_tuple)
-    except socket.error as (err_num, err_str):
+    except socket.error as (err_num, _err_str):
         if err_num == 48:
             raise Exception(
                 ('Port "{0}" is already in use --> start '
