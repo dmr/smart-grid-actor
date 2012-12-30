@@ -6,25 +6,27 @@ import time
 class ConfigurationException(Exception):
     pass
 
+USED_IDS = set([])
 
-used_ids = set([])
+def get_next_free_id(id_collection):
+    assert isinstance(id_collection, set)
+    return max(id_collection) + 1 if id_collection else 1
 
-def get_next_free_id(id_set):
-    return max(id_set) + 1 if id_set else 1
-
-def register_id(id, id_set):
-    id = int(id)
-    if id in id_set:
-        raise ConfigurationException(
-            "Id {0} already taken".format(id)
-        )
-    id_set.add(id)
-    return id
+def register_id(identifier, id_collection):
+    if identifier:
+        new_id = int(identifier)
+        if new_id in id_collection:
+            raise ConfigurationException(
+                "Id {0} already taken".format(new_id)
+            )
+    else:
+        new_id = get_next_free_id(id_collection)
+    id_collection.add(new_id)
+    return new_id
 
 
 class NotSolvable(Exception):
     pass
-
 class ConnectionError(Exception):
     pass
 
@@ -39,14 +41,17 @@ class AbstractActor(object):
         return u"<{0}: {1}>".format(
             self.__class__.__name__, self.id)
 
-    def __init__(self,
+    def __init__(
+            self,
             id=None,
-            id_collection=used_ids,
+            id_collection=None,
             level=None,
             ):
-        if not id:
-            id = get_next_free_id(id_collection)
-        self.id = register_id(id, id_collection)
+        print(USED_IDS)
+        self.id = register_id(
+            identifier=id,
+            id_collection=id_collection if id_collection else USED_IDS
+        )
 
         if level:
             self.level = level
@@ -59,16 +64,18 @@ class AbstractActor(object):
         raise NotImplementedError()
 
     def __eq__(self, other):
-        # Two Actors are equal if share the same
+        # Two Actors are equal if they share the same
         # value range and current value
-        if not type(other) == type(self): return False
+        if not type(other) == type(self):
+            return False
         if not self.get_value_range() == other.get_value_range():
             return False
         if not self.get_value() == other.get_value():
             return False
         return True
     def __ne__(self, other):
-        if type(other) != type(self): return True
+        if type(other) != type(self):
+            return True
         if not self.get_value_range() == other.get_value_range():
             return True
         if not self.get_value() == other.get_value():
@@ -84,12 +91,11 @@ class AbstractActor(object):
     def validate(self, value):
         try:
             set_value = int(value)
-        except ValueError as exc:
-            raise NotSolvable(
-                "Not a valid integer: '%s'" % value)
+        except ValueError:
+            raise NotSolvable(u"Not a valid integer: '{0}'".format(value))
         if set_value != value:
-            self.log("Value was converted: %s --> %s"
-                % (value, set_value))
+            self.log(u"Value was converted: {0} --> {1}".format(
+                value, set_value))
         return set_value
 
 
@@ -97,15 +103,16 @@ class Actor(AbstractActor):
     _value_range = None
     _value = None
 
-    def __init__(self,
-                 value_range,
-                 value=None,
-                 **kwargs
-                 ):
+    def __init__(
+            self,
+            value_range,
+            value=None,
+            **kwargs
+            ):
         for val in value_range:
             if not int(val) == val:
                 raise ValueError('Invalid value_range: '
-                    'Not an integer value: "%s"' % val)
+                    'Not an integer value: "{0}"'.format(val))
 
         self._value_range = set(value_range)
 
