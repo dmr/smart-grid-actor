@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
 import argparse
 
 from smart_grid_actor.actor import Actor
-from smart_grid_actor.server import start_actor_server, start_bjoern_server, start_wsgiref_server
+from smart_grid_actor.server import (
+    start_actor_server, start_bjoern_server, start_wsgiref_server
+)
 
 
 def add_actor_base_parser_params(parser):
@@ -32,6 +37,13 @@ def get_parser():
     )
     add_actor_base_parser_params(parser)
     add_actor_server_params(parser)
+
+    parser.add_argument('--use-wsgiref-server', action="store_true",
+        help=("Use the python 2.5 builtin web server implementation (slow!). "
+              "By default, a bjoern server is used but depending on your "
+              "environment bjoern might not be installable")
+    )
+
     return parser
 
 
@@ -40,9 +52,9 @@ def create_actor(value_range, value):
         value=value,
         value_range=value_range
     )
-    print "Actor: value_range={0}, value={1}".format(
+    print("Actor: value_range={0}, value={1}".format(
         list(actor.get_value_range()), actor.get_value()
-    )
+    ))
     return actor
 
 
@@ -63,7 +75,7 @@ def start_the_actor_server(
             if use_wsgiref_server else start_bjoern_server
     }
     if dry_run:
-        print u"DRY RUN with parameters Parameters: {0}".format(kw)
+        print(u"DRY RUN with parameters Parameters: {0}".format(kw))
         return kw
     start_actor_server(**kw)
 
@@ -77,10 +89,11 @@ def add_actor_server_params(parser):
         help=("Acceptable values for energy consumption "
               "of this actor server"),
         required=True)
-    parser.add_argument('--use-wsgiref-server', action="store_true",
-        help=("Use the python 2.5 builtin web server implementation (slow!). "
-              "By default, a bjoern server is used but depending on your "
-              "environment bjoern might not be installable")
-    )
-
     parser.set_defaults(execute_function=start_the_actor_server)
+
+
+def main():
+    parser = get_parser()
+    parsed_args_dct = parser.parse_args().__dict__
+    parsed_args_dct.pop('execute_function')(**parsed_args_dct)
+

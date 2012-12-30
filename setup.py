@@ -20,7 +20,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'smart_grid_actor = smart_grid_actor:main',
+            'smart_grid_actor = smart_grid_actor.cli:main',
             'smart_grid_actor_batch_starter = smart_grid_actor.batch_starter:main',
         ],
     },
@@ -31,7 +31,6 @@ setup(
     install_requires=[
         'argparse',
         'bjoern'
-
         #'spec', # for tests
         #'requests', # for tests
     ],
