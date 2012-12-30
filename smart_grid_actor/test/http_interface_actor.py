@@ -38,8 +38,8 @@ def assure_response(
 
 class HttpInterfaceTestActor(unittest.TestCase):
     def setUp(self):
-        self.vr = [1,2]
-        self.a1 = Actor(value_range=[1,2], value=1)
+        self.vr = [1, 2]
+        self.a1 = Actor(value_range=self.vr, value=1)
         self.uri, server_process = start_actor_server(
             actor=self.a1,
             start_in_background_thread=True
@@ -52,10 +52,15 @@ class HttpInterfaceTestActor(unittest.TestCase):
             p.join() # frees up the socket for next scenario
 
     def query(self, path):
-        return requests.get(urlparse.urljoin(self.uri, path), allow_redirects=False)
+        return requests.get(
+            urlparse.urljoin(self.uri, path),
+            allow_redirects=False
+        )
 
     def update(self, path, put_data):
-        return requests.put(urlparse.urljoin(self.uri, path), put_data,
+        return requests.put(
+            urlparse.urljoin(self.uri, path),
+            put_data,
             allow_redirects=False
         )
 

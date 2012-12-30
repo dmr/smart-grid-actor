@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import unittest
+import unittest2
 
 from smart_grid_actor.actor import AbstractActor, Actor
 from smart_grid_actor.test.actor_tests import ActorInterface
@@ -8,36 +8,31 @@ from smart_grid_actor.test.actor_tests import ActorInterface
 
 def test_actor_equality():
     # two actors with same value range and value are equal
-    assert Actor(value_range=[2],
-        value=2) == Actor(value=2, value_range=[2])
-    assert Actor(value=2,
-        value_range=[2]) != Actor(value=2,
-        value_range=[1,2])
-    assert Actor(value=1,
-        value_range=[1]) != Actor(value=2,
-        value_range=[1,2])
-    assert Actor(value=1,
-        value_range=[1]) != Actor(value=2,
-        value_range=[2])
+    a_1 = Actor(value=2, value_range=[2])
+    a_2 = Actor(value=2, value_range=[2])
+    a_3 = Actor(value=2, value_range=[1, 2])
+    a_4 = Actor(value=1, value_range=[1, 2])
+    a_5 = Actor(value_range=[1, 2]) # initialized with min(value_range)
+
+    assert a_1 == a_2
+    assert a_1 != a_3
+    assert a_3 != a_4
+    assert a_4 == a_5
 
 
-class TestAbstractActorInterface(unittest.TestCase):
-    def test(self):
+class TestAbstractActor(unittest2.TestCase):
+    def test_abstract_interface(self):
         actor = AbstractActor()
         assert actor.id is not None
-        self.failUnlessRaises(
-            NotImplementedError,
-            actor.get_value
-        )
-        self.failUnlessRaises(
-            NotImplementedError,
-            actor.get_value_range
-        )
-        self.failUnlessRaises(
-            NotImplementedError,
-            actor.set_value,
-            1
-        )
+
+        with self.assertRaises(NotImplementedError):
+            actor.get_value()
+
+        with self.assertRaises(NotImplementedError):
+            actor.get_value_range()
+
+        with self.assertRaises(NotImplementedError):
+            actor.set_value(1)
 
 
 def test_if_interface_tests_are_complete():
@@ -53,5 +48,5 @@ def test_if_interface_tests_are_complete():
 
     for test_cls in [ActorInterface]:
         for method_name in methods_for_complete_interface_test:
-            assert hasattr(test_cls, method_name),\
-            "{0} not in {1}".format(method_name, test_cls)
+            assert hasattr(test_cls, method_name), \
+                "{0} not in {1}".format(method_name, test_cls)

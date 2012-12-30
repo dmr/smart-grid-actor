@@ -7,13 +7,17 @@ def assure_is_int(test_class_instance, value, expected_value):
 
 
 class AbstractInterface(object):
+    #a1 = None
+    #assertEqual = None
+    #assertRaises = None
+
     def test_get_value(self):
         assure_is_int(self, self.a1.get_value(), 1)
 
     def test_get_value_range(self):
-        self.failUnlessEqual(
+        self.assertEqual(
             self.a1.get_value_range(),
-            set([1,2,3])
+            set([1, 2, 3])
         )
 
     def test_set_value_int(self):
@@ -24,11 +28,8 @@ class AbstractInterface(object):
         assure_is_int(self, self.a1.get_value(), 2)
 
     def test_set_value_int_out_of_range(self):
-        self.failUnlessRaises(
-            NotSolvable,
-            self.a1.set_value,
-            0
-        )
+        with self.assertRaises(NotSolvable):
+            self.a1.set_value(0)
 
     def test_set_value_float(self):
         assert self.a1.get_value() == 1
@@ -47,10 +48,7 @@ class AbstractInterface(object):
     def test_set_value_string_invalid(self):
         assert self.a1.get_value() == 1
 
-        self.failUnlessRaises(
-            NotSolvable,
-            self.a1.set_value,
-            "Zwei"
-        )
+        with self.assertRaises(NotSolvable):
+            self.a1.set_value("Zwei")
 
         assure_is_int(self, self.a1.get_value(), 1)

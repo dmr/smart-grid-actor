@@ -3,7 +3,7 @@
 import unittest
 
 from smart_grid_actor.actor import Actor
-from smart_grid_actor.cli_parser import get_parser
+from smart_grid_actor.cli import get_parser
 
 
 def do_parser_test(
@@ -54,7 +54,8 @@ class ActorServerCliParserTest(unittest.TestCase):
     def test_actor_hostname_and_port_value(self):
         do_parser_test(
             self,
-            '--host-name 127.0.0.1 -p9000 --value-range 1 --dry-run',
+            '--host-name 127.0.0.1 -p9000 '
+            '--value-range 1 --dry-run',
             expected_actor=Actor(value=1,
                 value_range=[1]),
             expected_host_name='127.0.0.1',

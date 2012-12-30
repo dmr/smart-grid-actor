@@ -18,7 +18,6 @@ def do_parser_test(
     #print parsed_args
 
     parsed_args_dct = parsed_args.__dict__
-    parsed_args_dct.pop('use_wsgiref_server')
     lst_of_started_servers = parsed_args_dct.pop('execute_function')(
         stop_servers_after_json_save=True,
         **parsed_args_dct
@@ -34,7 +33,10 @@ def do_parser_test(
     pprint.pprint(lst_of_started_servers)
 
     if server_count:
-        test_instance.assertEqual(len(lst_of_started_servers), server_count)
+        test_instance.assertEqual(
+            len(lst_of_started_servers),
+            server_count
+        )
 
     if server_ports:
         test_instance.assertEqual([
@@ -64,7 +66,8 @@ class ActorServerCliParserTest(unittest.TestCase):
     def test_number_plus_start_port_plus_exclude_ports(self):
         do_parser_test(
             self,
-            '--value-range 1 -n4 --start-port 1334 --exclude-ports 1335 1336',
+            '--value-range 1 -n4 --start-port 1334 '
+            '--exclude-ports 1335 1336',
             server_count=4,
             server_ports=[1334,1337,1338,1339]
         )
