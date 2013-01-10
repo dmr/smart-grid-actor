@@ -47,7 +47,6 @@ class AbstractActor(object):
             id_collection=None,
             level=None,
             ):
-        print(USED_IDS)
         self.id = register_id(
             identifier=id,
             id_collection=id_collection if id_collection else USED_IDS
